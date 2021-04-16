@@ -1,0 +1,502 @@
+{
+    "dataRoles": [
+        {
+            "name": "Shared Axis",
+            "displayName": "Shared Axis",
+            "kind": "Grouping"
+        },
+        {
+            "name": "Column Series",
+            "displayName": "Column Series",
+            "kind": "Grouping"
+        },
+        {
+            "name": "Column Values",
+            "displayName": "Column Values",
+            "kind": "Measure"
+        },
+        {
+            "name": "Line Values",
+            "displayName": "Line Values",
+            "kind": "Measure"
+        },
+        {
+            "name": "Capacities",
+            "displayName": "Capacities",
+            "kind": "Measure"
+        }
+    ],
+    "dataViewMappings": [
+        {
+            "conditions" : [
+                {
+                    "Shared Axis": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "Column Series": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "Column Values": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "Line Values": {
+                        "min": 0,
+                        "max": 1
+                    },
+                    "Capacities":{
+                        "min": 0,
+                        "max":1
+                    }
+                }
+            ],
+            "categorical": {
+                "categories": {
+                    "for": {
+                        "in": "Shared Axis"
+                    }
+                },
+                "values": {
+                    "group": {
+                        "by": "Column Series",
+                        "select": [
+                            {
+                                "for": {
+                                    "in": "Column Values"
+                                }
+                            },
+                            {
+                                "for": {
+                                    "in": "Line Values"
+                                }
+                            },
+                            {
+                                "for": {
+                                    "in": "Capacities"
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ],
+    "objects": {
+        "DataColors": {
+            "displayName": "Data Colors",
+            "properties": {
+                "seriesColor": {
+                    "displayName": "Series Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "AxisSettings": {
+            "displayName": "Axis Settings",
+            "properties": {
+                "LegendPosition": {
+                    "displayName": "Legend Position",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "top",
+                                "displayName": "Top"
+                            },
+                            {
+                                "value": "bottom",
+                                "displayName": "Bottom"
+                            }
+                        ]
+                    }
+                },
+                "YMaxValue": {
+                    "displayName": "Y Max Value",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "YAxisCount": {
+                    "displayName": "Y Axis Tick Count",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "XAxisBarWhiteSpace": {
+                    "displayName": "Whitespace of X Bars",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "XAxisCleanToggle": {
+                    "displayName": "Clean X Data",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "LabelSettings": {
+            "displayName": "Label Settings",
+            "properties": {
+                "TitleText": {
+                    "displayName": "Title Text",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "TitleColor": {
+                    "displayName": "Title Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "TitleFontFamily": {
+                    "displayName": "Title Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "TitleFontSize": {
+                    "displayName": "Title Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "TitleToggle": {
+                    "displayName": "Title Toggle",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "YAxisText": {
+                    "displayName": "Y Axis Text",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "YAxisColor": {
+                    "displayName": "Y Axis Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "YAxisFontFamily": {
+                    "displayName": "Y Axis Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "YAxisFontSize": {
+                    "displayName": "Y Axis Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "YAxisValueColor": {
+                    "displayName": "Y Axis Value Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "YAxisValueFontFamily": {
+                    "displayName": "Y Axis Value Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "YAxisValueFontSize": {
+                    "displayName": "Y Axis Value Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "XAxisText": {
+                    "displayName": "X Axis Text",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "XAxisColor": {
+                    "displayName": "X Axis Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "XAxisFontFamily": {
+                    "displayName": "X Axis Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "XAxisFontSize": {
+                    "displayName": "X Axis Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "XAxisValueColor": {
+                    "displayName": "X Axis Value Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "XAxisValueFontFamily": {
+                    "displayName": "X Axis Value Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "XAxisValueFontSize": {
+                    "displayName": "X Axis Value Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "LabelColor": {
+                    "displayName": "Label Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "LabelFontFamily": {
+                    "displayName": "Label Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "LabelFontSize": {
+                    "displayName": "Label Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "LabelBackgroundColor": {
+                    "displayName": "Label Background Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "LabelToggle": {
+                    "displayName": "Label Toggle",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "LegendColor": {
+                    "displayName": "Legend Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "LegendFontFamily": {
+                    "displayName": "Legend Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "LegendFontSize": {
+                    "displayName": "Legend Font Size",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                }
+            }
+        },
+        "ThresholdSettings": {
+            "displayName": "Threshold Settings",
+            "properties": {
+                "ThresholdLineThickness": {
+                    "displayName": "Threshold Thickness",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "ThresholdLineColor": {
+                    "displayName": "Threshold Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "ThresholdLineType": {
+                    "displayName": "Threshold Line Type",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "dashed",
+                                "displayName": "Dashed"
+                            },
+                            {
+                                "value": "solid",
+                                "displayName": "Solid"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "GrowthSettings": {
+            "displayName": "Growth Settings",
+            "properties": {
+                "Selector1": {
+                    "displayName": "First Selection",
+                    "type": {
+                        "text" : true
+                    }
+                },
+                "Selector2": {
+                    "displayName": "Second Selection",
+                    "type": {
+                        "text" : true
+                    }
+                },
+                "FontColor": {
+                    "displayName": "Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "FontFamily": {
+                    "displayName": "Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "FontSize": {
+                    "displayName": "Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "LineColor": {
+                    "displayName": "Line Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "LineOffsetHeight": {
+                    "displayName": "Line Height",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "LineSize": {
+                    "displayName": "Line Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "LabelBackgroundColor": {
+                    "displayName": "Background Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "LabelHeight": {
+                    "displayName": "Label Height",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "LabelWidth": {
+                    "displayName": "Label Width",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "ArrowWidth": {
+                    "displayName": "Arrow Height",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "ArrowHeight": {
+                    "displayName": "Arrow Width",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "ArrowToggle": {
+                    "displayName": "Show Arrow",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        }
+    },
+    "suppressDefaultTitle": true
+}

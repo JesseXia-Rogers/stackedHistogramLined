@@ -13,6 +13,8 @@ export let Regions: string[] = [];
 export let BarDataProcessed: Interfaces.BarData[] = [];
 export let DataNumeric: Interfaces.Numeric;
 
+export let test = {};
+
 
 export function transformData(dataView: DataView): void {
     // reset global var data
@@ -46,33 +48,45 @@ export function transformData(dataView: DataView): void {
     
     const series: DataViewValueColumnGroup[] = dataView.categorical.values.grouped();
 
-    const category = dataView.categorical.categories[0];
-    const columns = category.values;
-
+    const category: powerbi.DataViewCategoryColumn = dataView.categorical.categories[0];
+    let columns: PrimitiveValue[] = category.values;
+    columns = columns.map(col => col ?? '');
+    console.log(columns)
+    let count = 0;
     for (let idx = 0; idx < columns.length; ++idx) {
-        let col: PrimitiveValue = columns[idx] ?? '';
-        let barData: Interfaces.BarData = {
-            column: col.toString(),
-            data: [],
-            index: idx
-        };
+        // let col: PrimitiveValue = columns[idx] ?? '';
+        // let barData: Interfaces.BarData = {
+        //     column: col.toString(),
+        //     data: [],
+        //     index: idx
+        // };
+
         // series traversal is O(1)
         series.forEach(serie => {      
             let serieName = serie.name ?? '';
+            let data = {};
             serie.values.forEach(val => {
-                if (val.source.displayName.toLowerCase().includes('value')) {
-                    let seriesValue = isNaN(Number(val.values[idx])) ? 0 : Number(val.values[idx]);
-                    barData.data.push({
-                        region: serieName.toString(),
-                        value: seriesValue
-                    })
-                }
+                let role: string = Object.keys(val.source.roles)[0];
+                data[role] = val.values[idx];
+                test[count] = data;
+                // if (val.source.displayName.toLowerCase().includes('value')) {
+                //     let seriesValue = isNaN(Number(val.values[idx])) ? 0 : Number(val.values[idx]);
+                //     barData.data.push({
+                //         region: serieName.toString(),
+                //         value: seriesValue
+                //     })
+                // }
+
+                ++count;
             })
         });
-
-        BarDataProcessed.push(barData);
     }
-    
+
+    console.log(test);
+
+    return;
+
+
     // get threshold values
     for (let val of series[0].values) {
         if (val.source.displayName.toLowerCase().includes('threshold')) {

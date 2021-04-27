@@ -45,20 +45,16 @@ export class DataColors {
 }
 
 export class AxisSettings {
+    public GroupedBars: boolean = false;
+    public ChartMargin: number = 40;
     public LegendPosition: string = 'top';
     public YMaxValue: number = 0;
     public YAxisCount: number = 3;
-    public XAxisBarWhiteSpace: number = 5;
+    public XAxisBarWhiteSpace: number = 0.3;
     public XAxisCleanToggle: boolean = false;
 }
 
 export class LabelSettings {
-    public TitleText: string = 'Lorem ipsum';
-    public TitleColor: string = '#000000';
-    public TitleFontFamily: string = 'Calibri';
-    public TitleFontSize: number = 18;
-    public TitleToggle: boolean = true;
-
     public YAxisText: string = 'Value';
     public YAxisColor: string = '#000000';
     public YAxisFontFamily: string = 'Calibri';
@@ -101,14 +97,13 @@ export class GrowthSettings {
     public FontSize: number = 11;
 
     public LineColor: string = '#000000';
-    public LineOffsetHeight: number = 10;
+    public LineOffsetHeight: number = 25;
     public LineSize: number = 2;
     
     public LabelBackgroundColor: string = '#ffffff';
     public LabelHeight: number = 20;
     public LabelWidth: number = 50;
 
-    public ArrowWidth: number = 4;
-    public ArrowHeight: number = 8;
+    public ArrowSize: number = 20;
     public ArrowToggle: boolean = true;;
 }

@@ -1,0 +1,12 @@
+import * as Interfaces from './interfaces';
+import powerbi from "powerbi-visuals-api";
+import DataView = powerbi.DataView;
+import DataViewValueColumnGroup = powerbi.DataViewValueColumnGroup;
+export declare let LineValues: number[];
+export declare let Capacity: number[];
+export declare let Series: string[];
+export declare let DataNumeric: Interfaces.Numeric;
+export declare let D3Data: any[];
+export declare let Columns: any[];
+export declare function transformData(dataView: DataView): void;
+export declare function calculateNumerics(series: DataViewValueColumnGroup[]): void;

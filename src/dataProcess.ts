@@ -5,28 +5,30 @@ import DataView = powerbi.DataView;
 import PrimitiveValue = powerbi.PrimitiveValue;
 import DataViewValueColumnGroup = powerbi.DataViewValueColumnGroup;
 import DataViewValueColumn = powerbi.DataViewValueColumn;
+import { D3Visual } from './d3Visual';
+import { ThresholdSettings } from './settings';
 
 
-export let Threshold: number = 0;
+export let LineValues: number[] = [];
 export let Capacity: number[] = [];
-export let Regions: string[] = [];
-export let BarDataProcessed: Interfaces.BarData[] = [];
+export let Series: string[] = [];
 export let DataNumeric: Interfaces.Numeric;
 
-export let test = {};
+export let D3Data = [];
+
+export let Columns = [];
 
 
 export function transformData(dataView: DataView): void {
     // reset global var data
     // reset
-    Threshold = 0;
+    LineValues = [];
     Capacity = [];
-    Regions = [];
-    BarDataProcessed = [];
+    Series = [];
+    D3Data = []
     DataNumeric = {
         min: 0,
         max: 0,
-        value: 0,
         topRounded: 0,
         interval: 0
     };
@@ -51,155 +53,84 @@ export function transformData(dataView: DataView): void {
     const category: powerbi.DataViewCategoryColumn = dataView.categorical.categories[0];
     let columns: PrimitiveValue[] = category.values;
     columns = columns.map(col => col ?? '');
-    console.log(columns)
-    let count = 0;
-    for (let idx = 0; idx < columns.length; ++idx) {
-        // let col: PrimitiveValue = columns[idx] ?? '';
-        // let barData: Interfaces.BarData = {
-        //     column: col.toString(),
-        //     data: [],
-        //     index: idx
-        // };
+    Columns = columns;
 
-        // series traversal is O(1)
-        series.forEach(serie => {      
-            let serieName = serie.name ?? '';
-            let data = {};
-            serie.values.forEach(val => {
-                let role: string = Object.keys(val.source.roles)[0];
-                data[role] = val.values[idx];
-                test[count] = data;
-                // if (val.source.displayName.toLowerCase().includes('value')) {
-                //     let seriesValue = isNaN(Number(val.values[idx])) ? 0 : Number(val.values[idx]);
-                //     barData.data.push({
-                //         region: serieName.toString(),
-                //         value: seriesValue
-                //     })
-                // }
-
-                ++count;
-            })
-        });
-    }
-
-    console.log(test);
-
-    return;
-
-
-    // get threshold values
-    for (let val of series[0].values) {
-        if (val.source.displayName.toLowerCase().includes('threshold')) {
-            Threshold += isNaN(Number(val.values[0])) ? 0 : Number(val.values[0]);
-        }
-    }
-
-    // threshold is the same all regions of same KPI
-    Threshold = Threshold * series.length;
-
-    // get capacity and region
-    series.forEach(serie => {
-        let region = serie.name;
-        let capacity = 0;
-        for (let val of serie.values) {
-            if (val.source.displayName.toLowerCase().includes('capacity')) {
-                capacity = isNaN(Number(val.values[0])) ? 0 : Number(val.values[0]);
-                break;
-            }
-        }
-        
-        Regions.push(region.toString());
-        Capacity.push(capacity)
-    });
-
-    // remove invalid entrys in BarDataProcessed. Invalid includes:
-    // - first entry has missing name OR data is ALL null/0
-    for (let idx = 0; idx < BarDataProcessed.length; ++idx) {
-        let data = BarDataProcessed[idx];
-        // let dataSum = data.data.reduce((a, b) => a + (b.value ?? 0), 0);
-        if (data.column == "") {
-            BarDataProcessed.shift();
-        }
-        else {
-            break;
-        }
-    }
-    for (let idx = BarDataProcessed.length - 1; idx >= 0; --idx) {
-        let data = BarDataProcessed[idx];
-        if (data.column == "") {
-            BarDataProcessed.pop();
-        }
-        else {
-            break;
-        }
-    }
-
-    // check if capacity is empty
-    if (Capacity.length == 0) {
-        console.error('Capacity is empty.');
-        return;
-    }
-
-    // check if region is empty
-    if (Regions.length == 0) {
-        console.error('Regions is empty.');
-        return;
-    }
-
-    // add in capacity entry
-    let capacityData: Interfaces.BarData = {
-        column: 'Capacity',
-        data: [],
-        index: 0
+    // insert capacity data into d3
+    let capacityData = {
+        sharedAxis: 'Capacity'
     };
 
-    Regions.forEach((region, idx) => {
-        capacityData.data.push({
-            region: region,
-            value: Capacity[idx] ?? 0
-        })
+    series.forEach(serie => {      
+        let serieName: PrimitiveValue = serie.name ?? '';
+        serie.values.forEach(val => {
+            if (Object.keys(val.source.roles)[0] == 'Capacities') {
+                capacityData[serieName.toString()] = val.values[0] ?? 0;
+            }
+        });
     });
 
-    // insert capacity data to the front
-    BarDataProcessed.unshift(capacityData);
-   
+    console.log(series);
+
+    D3Data.push(capacityData);
+
+    // get regions
+    series.forEach(serie => {      
+        let serieName: PrimitiveValue = serie.name ?? '';
+        Series.push(serieName.toString());
+    });
+
+    // get threshold
+    series[0].values.forEach(val => {
+        if (Object.keys(val.source.roles)[0] == 'Line Values') {
+            LineValues = val.values.map(d => <number>d);
+        }
+    })
+
+    // insert rest of data
+    for (let idx = 0; idx < columns.length; ++idx) {
+        let data = {
+            sharedAxis: columns[idx]
+        };
+        // series traversal is O(1)
+        series.forEach(serie => {      
+            let serieName: PrimitiveValue = serie.name ?? '';
+            serie.values.forEach(val => {
+                if (Object.keys(val.source.roles)[0] == 'Column Values') {
+                    data[serieName.toString()] = val.values[idx] ?? 0;
+                }
+            })
+        });
+
+        D3Data.push(data);
+    }
+
     // set global numeric vars
-    calculateNumerics();
+    calculateNumerics(series);
 
     return;
 }
 
 
-export function calculateNumerics(): void {
+export function calculateNumerics(series: DataViewValueColumnGroup[]): void {
     // calculates numerics from DataProcessed
-    if (BarDataProcessed.length == 0) {
+    if (D3Data.length == 0 || Series.length == 0) {
         console.error('BarDataProcessed is empty. Unable to get numerics.');
         return;
     }
 
-
-    // // compute range
-    let range: Interfaces.Range = { min: 0, max: 0, value: 0 };
-    BarDataProcessed.forEach(barData => {
+    let max = 0;
+    D3Data.forEach(data => {
         let sum = 0;
-        let values: number[] = [];
-        barData.data.forEach(entry => {
-            let value: number = entry.value;
-            sum += value
-            values.push(value)
-        });
+        Series.forEach(serie => {
+            sum += data[serie] ?? 0;
+        })
 
-        let localMin = Math.min(...values);
-
-        range.min = (localMin < range.min) ? localMin : range.min;
-        range.max = (sum > range.max) ? sum : range.max;
+        max = (sum > max) ? sum : max;
     });
+    let maxLineVal: number = Math.max(...LineValues);
+    max = (maxLineVal > max) ? maxLineVal: max;
 
-    // change range from capacity values
-    let capacitySum = Capacity.reduce((a, b) => a + b, 0);
-    range.max = (capacitySum > range.max) ? capacitySum : range.max;
-
-    range.value = range.max - range.min;
+    let range: Interfaces.Range = { min: 0, max: max };
 
     // compute top rounded
     let digits = (range.max - range.max % 1).toString().length;
@@ -210,7 +141,6 @@ export function calculateNumerics(): void {
     DataNumeric = {
         min: range.min,
         max: range.max,
-        value: range.value,
         topRounded: topRounded,
         interval: 0
     };

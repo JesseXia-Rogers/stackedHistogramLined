@@ -1,0 +1,17 @@
+{
+    "version": "1.0.0",
+    "author": {"name":"Ben Xiao","email":"ben.xiao@rci.rogers.ca"},
+    "resources": [
+        {
+            "resourceId": "rId0",
+            "sourceType": 5,
+            "file": "resources/stackedHistogramLined26F8DE7BF82D4BE7B654B878A184D90E.pbiviz.json"
+        }
+    ],
+    "visual": {"name":"stackedHistogramLined","displayName":"StackedHistogramLined","guid":"stackedHistogramLined26F8DE7BF82D4BE7B654B878A184D90E","visualClassName":"Visual","version":"1.0.0","description":"Stacked barchart for Rogers growth","supportUrl":"https://github.com/Benoolean/stackedHistogramLined","gitHubUrl":""},
+    "metadata": {
+        "pbivizjson": {
+            "resourceId": "rId0"
+        }
+    }  
+}

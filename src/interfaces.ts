@@ -9,13 +9,11 @@ import ISelectionId = powerbi.visuals.ISelectionId;
 export interface Range {
     min: number;
     max: number;
-    value: number;
 }
 
 export interface Numeric {
     min: number;
     max: number;
-    value: number;
     topRounded: number;
     interval: number;
 };
@@ -64,3 +62,6 @@ export interface DataPointSerie {
 
     seriesColor: string;
 }
+
+
+// new stuff

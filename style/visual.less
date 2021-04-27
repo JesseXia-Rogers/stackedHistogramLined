@@ -3,8 +3,8 @@
 }
 
 .visual-container {
-    margin-left: 10px;
-    margin-right: 10px;;
+    margin: 0 auto;
+    display: block;
 }
 
 .title {
@@ -182,9 +182,24 @@
     transform: translateY(-50%);
 }
 
-    .visual-container, .legend-container, .title, .chart-container, .axis-container, 
-    .y-axis-container, .y-axis, .zero-axis-container, .x-axis-container, 
-    .x-axis, .data-container, .x-axis-label, 
-    .horz-grid-line, .threshold-line, .bar  {
-        background-color: transparent;
-    }
+.visual-container, .legend-container, .title, .chart-container, .axis-container, 
+.y-axis-container, .y-axis, .zero-axis-container, .x-axis-container, 
+.x-axis, .data-container, .x-axis-label, 
+.horz-grid-line, .threshold-line, .bar  {
+    background-color: transparent;
+}
+
+
+// svg
+
+.visual-svg {
+    display: block;
+    margin: 0 auto;
+}
+
+.legend-selector {
+    position: absolute;
+    width: 100%;
+    display: block;
+    top: 0;
+}

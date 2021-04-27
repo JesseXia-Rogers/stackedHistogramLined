@@ -1,0 +1,180 @@
+* {
+  margin: 0px;
+}
+.visual-container {
+  margin: 0 auto;
+  display: block;
+}
+.title {
+  position: relative;
+  background-color: pink;
+}
+.legend-container {
+  background-color: pink;
+  display: inline-block;
+  position: relative;
+}
+.legend {
+  display: inline-block;
+  margin-left: 10px;
+}
+.legend-color {
+  display: inline-block;
+}
+.legend-value {
+  display: inline-block;
+  margin-left: 5px;
+}
+.chart-container {
+  height: 100vh;
+  background: orange;
+  position: relative;
+}
+.axis-title-horz {
+  margin: 0;
+  position: absolute;
+  vertical-align: middle;
+  text-align: center;
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+}
+.y-axis-container {
+  background-color: blue;
+  position: relative;
+  float: left;
+}
+.y-axis-label {
+  margin: 0;
+  position: absolute;
+  text-align: center;
+  top: 40%;
+  transform-origin: bottom center;
+  transform: translate(-50%, 0%) rotate(90deg);
+}
+.y-axis-tick {
+  z-index: 200;
+  position: relative;
+}
+.horz-grid-line {
+  background-color: transparent;
+  height: 1px;
+  background-image: linear-gradient(to right, #636363 10%, rgba(138, 136, 136, 0) 0%);
+  background-position: top;
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  position: absolute;
+  z-index: 201;
+}
+.y-axis-tick-value {
+  position: absolute;
+  z-index: 202;
+}
+.zero-axis-container {
+  background-color: powderblue;
+  position: absolute;
+  text-align: right;
+  bottom: 0;
+}
+.zero-axis-label {
+  position: inherit;
+}
+.data-container {
+  background-color: violet;
+  position: relative;
+  float: right;
+}
+.x-axis-container {
+  position: relative;
+  float: right;
+  background-color: grey;
+}
+.x-axis-label {
+  position: absolute;
+  text-align: center;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+.x-axis {
+  background-color: lightcoral;
+  position: absolute;
+  display: block;
+  margin: 0;
+  z-index: 100;
+}
+.x-axis-label {
+  background-color: white;
+  text-align: center;
+}
+.bar {
+  background-color: black;
+  position: absolute;
+  bottom: 0;
+}
+.bar-total-label {
+  position: inherit;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 204;
+}
+.threshold-line {
+  background-color: maroon;
+  position: absolute;
+  z-index: 100;
+}
+.triangle-down {
+  width: 0;
+  height: 0;
+  position: absolute;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 8px solid #555;
+  z-index: 100;
+}
+.grow-line {
+  position: absolute;
+  z-index: 100;
+}
+.grow-value {
+  border-radius: 9px;
+  position: absolute;
+  z-index: 100;
+  text-align: center;
+  font-size: 11px;
+}
+.growth-value-text {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.visual-container,
+.legend-container,
+.title,
+.chart-container,
+.axis-container,
+.y-axis-container,
+.y-axis,
+.zero-axis-container,
+.x-axis-container,
+.x-axis,
+.data-container,
+.x-axis-label,
+.horz-grid-line,
+.threshold-line,
+.bar {
+  background-color: transparent;
+}
+.visual-svg {
+  display: block;
+  margin: 0 auto;
+}
+.legend-selector {
+  position: absolute;
+  width: 100%;
+  display: block;
+  top: 0;
+}
+
+
+/*# sourceMappingURL=visual.css.map*/

@@ -275,7 +275,7 @@ export class D3Visual {
             }
             else {
                 // transition y axis
-                y.domain([0, Math.max(dp.DataNumeric.topRounded * 1.2, this._settings.AxisSettings.YMaxValue)])
+                y.domain([0, Math.max(Math.ceil(dp.DataNumeric.max * 1.2), this._settings.AxisSettings.YMaxValue)])
                 yAxisG.transition()
                 .duration(2000)
                 .call(yAxis)

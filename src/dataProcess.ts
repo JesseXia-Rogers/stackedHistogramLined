@@ -105,6 +105,10 @@ export function transformData(dataView: DataView): void {
     // set global numeric vars
     calculateNumerics(series);
 
+    console.log(series);
+    console.log(dataView);
+    console.log(DataNumeric)
+
     return;
 }
 

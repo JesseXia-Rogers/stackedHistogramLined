@@ -214,6 +214,20 @@ export class D3Visual {
             legendText.attr('y', legendSelector.offsetHeight);
         }
 
+        // hover info text
+        let hoverInfoDiv = d3.select('body')
+        .append('div')
+        .classed('hoverInfoDiv', true)
+        .style('opacity', 0)
+        .style('position', 'absolute')
+        .style('top', 0)
+        .style('color', '#fff')
+        .style('font-size', '11px')
+        .on('mouseover', function() {
+            let selected = d3.select(this);
+            selected.style('display', 'none');
+        });
+
         // iterate through each serie stack
         stackData.forEach((serie, idx) => {
             // create bar
@@ -226,7 +240,10 @@ export class D3Visual {
             .attr('width', x.bandwidth())
             .attr('x', data => x(data.data.sharedAxis.toString()))
             .attr('y', 0)
-            .attr('height', 0);
+            .attr('height', 0)
+            .attr('opacity', 1)
+            .attr('serie', dp.Series[idx])
+            .attr('xIdx', (_, i) => i);
 
             // set bar transition
             if (this._settings.AxisSettings.GroupedBars) {
@@ -274,15 +291,97 @@ export class D3Visual {
             }
 
             // get mouse hover
-            bar.on('mouseover', (data, idx) => {
-                console.log('something')
-                bar.transition()
-                .duration(200)		
-                .style("opacity", .9);
-            }).on("mouseout", (data, idx) => {		
-                bar.transition()		
-                    .duration(500)		
-                    .style("opacity", 0);	
+            bar.on('mouseover', function(data) {
+                let selected = d3.select(this);
+                let serie: string = selected.attr('serie');
+                let xIdxAttr: string = selected.attr('xIdx');
+                let xIdx: number = -1;
+                let hoverWidth = 100;
+                try {
+                    xIdx = parseInt(xIdxAttr);
+                }
+                catch (e) {
+                    // error converting xidx 
+                    console.error(e);
+                    return;
+                }
+
+                if (!serie || xIdx == -1) {
+                    return;
+                }
+
+                let xValue = null;
+                try {
+                    xValue = dp.D3Data[xIdx].sharedAxis;
+                }
+                catch (e) {
+                    // error getting d3data -- index out of bounds or undefined
+                    console.error(e);
+                    return;
+                }
+
+               
+                // hoverInfo.raise();
+                let eventTarget: HTMLElement = d3.event.target; 
+                if (!eventTarget) {
+                    console.error('Unable to get event target');
+                    return;
+                }
+                let eventBounds = eventTarget.getBoundingClientRect()
+                let posX = eventBounds.x;
+                let posY = eventBounds.y;
+                let padding = 10;
+
+                hoverInfoDiv.transition()
+                .duration(400)
+                .style('display', 'block')
+                .style('opacity', 1)
+                .style('background-color', 'grey')
+                .style('padding', padding + 'px');
+
+                let summaryText = '';
+
+                // reverse to match order of bars
+                Object.keys(data.data).reverse().forEach(key => {
+                    if (key != 'sharedAxis') {
+                        let text = key + ': ' + nFormatter(data.data[key], 1)  + '<br>';
+                        if (key == serie) {
+                            text = '<u>' + text + '</u>';
+                        }
+                        summaryText += text;
+                    }
+                    else {
+                        summaryText += '<br>'
+                    }
+                });
+
+                // text
+                hoverInfoDiv.html(
+                    data.data.sharedAxis + 
+                    `<br>` + 
+                    summaryText
+                );
+
+                let xPosOffset = x.bandwidth() * 1.5;
+                if (xIdx > (dp.D3Data.length * (2/3))) {
+                    xPosOffset = - hoverInfoDiv.node().offsetWidth - (x.bandwidth() / 2);
+                }
+                posX += xPosOffset;
+
+                // get max top
+                let body: HTMLElement = <HTMLElement>d3.select('body').node();
+                let bodyHeight = body.getBoundingClientRect().height;
+                let maxTop = bodyHeight - hoverInfoDiv.node().offsetHeight;
+
+                hoverInfoDiv.style('left', posX + 'px')
+                .style('top', Math.min(posY, maxTop) + 'px');
+            })
+            .on('mouseout', function(_) {
+                hoverInfoDiv.transition()
+                .duration(100)
+                .attr('width', 0)
+                .attr('height', 0)
+                .style('opacity', 0)
             });
         });
         
@@ -304,7 +403,51 @@ export class D3Visual {
 
         if (this._settings.ThresholdSettings.ThresholdLineType == 'dashed') {
             svg.selectAll('.lineValues')
-            .attr('stroke-dasharray', '5,4')
+            .attr('stroke-dasharray', '5,4');
+        }
+
+        // bar summation label
+        if (this._settings.LabelSettings.LabelToggle && 
+            this.container.offsetWidth > 800 &&
+            this._settings.AxisSettings.XAxisBarWhiteSpace < 0.5) {
+
+            let maxStackData: any[] = stackData[stackData.length - 1];
+            maxStackData.forEach(data => {
+                let maxVal = data[1];
+
+                // background
+                svg.append('rect')
+                .attr('width', x.bandwidth())
+                .attr('height', 20)
+                .attr('fill', this._settings.LabelSettings.LabelBackgroundColor)
+                .attr('opacity', 0)
+                .attr('y', y(maxVal) - 20)
+                .attr('x', x(data.data.sharedAxis))
+                .transition()
+                .ease(d3.easeQuadOut)
+                .duration(400)
+                .delay(1000)
+                .attr('opacity', '1');
+
+                // text
+                svg.append('text')
+                .attr('width', x.bandwidth())
+                .attr('height', 20)
+                .attr('fill', this._settings.LabelSettings.LabelColor)
+                .attr('opacity', 0)
+                .attr('font-size', this._settings.LabelSettings.LabelFontSize)
+                .attr('font-family', this._settings.LabelSettings.LabelFontFamily)
+                .attr('text-anchor', 'middle')
+                .attr('dominant-baseline', 'middle')
+                .attr('y', y(maxVal) - 10)
+                .attr('x', x(data.data.sharedAxis) + x.bandwidth()/2)
+                .text(nFormatter(maxVal, 1))
+                .transition()
+                .ease(d3.easeQuadOut)
+                .duration(400)
+                .delay(700)
+                .attr('opacity', '1');
+            })
         }
 
         // growth
@@ -420,50 +563,8 @@ export class D3Visual {
                 .text(growthValueRounded.toString());
             }
             catch(e) { 
-                this.parent.innerHTML = "Unable to create growth labels";
+                this.parent.innerHTML = 'Unable to create growth labels';
             }
-        }
-
-        // bar summation label
-        console.log(this.container.offsetWidth)
-        if (this._settings.LabelSettings.LabelToggle && 
-            this.container.offsetWidth > 800 &&
-            this._settings.AxisSettings.XAxisBarWhiteSpace < 0.5) {
-            let maxStackData: any[] = stackData[stackData.length - 1];
-            maxStackData.forEach(data => {
-                let maxVal = data[1];
-
-                svg.append('rect')
-                .attr('width', x.bandwidth())
-                .attr('height', 20)
-                .attr('fill', this._settings.LabelSettings.LabelBackgroundColor)
-                .attr('opacity', 0)
-                .attr('y', y(maxVal) - 20)
-                .attr('x', x(data.data.sharedAxis))
-                .transition()
-                .ease(d3.easeQuadOut)
-                .duration(400)
-                .delay(1000)
-                .attr('opacity', '1');
-
-                svg.append('text')
-                .attr('width', x.bandwidth())
-                .attr('height', 20)
-                .attr('fill', this._settings.LabelSettings.LabelColor)
-                .attr('opacity', 0)
-                .attr('font-size', this._settings.LabelSettings.LabelFontSize)
-                .attr('font-family', this._settings.LabelSettings.LabelFontFamily)
-                .attr('text-anchor', 'middle')
-                .attr('dominant-baseline', 'middle')
-                .attr('y', y(maxVal) - 10)
-                .attr('x', x(data.data.sharedAxis) + x.bandwidth()/2)
-                .text(this.nFormatter(maxVal, 1))
-                .transition()
-                .ease(d3.easeQuadOut)
-                .duration(400)
-                .delay(700)
-                .attr('opacity', '1');
-            })
         }
     }
 
@@ -486,25 +587,25 @@ export class D3Visual {
             min: 0
         }
     }
+}
 
-    private nFormatter(num, digits): string {
-        // converts 15,000 to 15k and etc
-        var si = [
-            { value: 1, symbol: '' },
-            { value: 1E3, symbol: 'K' },
-            { value: 1E6, symbol: 'M' },
-            { value: 1E9, symbol: 'B' },
-            { value: 1E12, symbol: 'T' },
-            { value: 1E15, symbol: 'P' },
-            { value: 1E18, symbol: 'E' }
-        ];
-        var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-        var i;
-        for (i = si.length - 1; i > 0; i--) {
-            if (num >= si[i].value) {
-                break;
-            }
+function nFormatter(num, digits): string {
+    // converts 15,000 to 15k and etc
+    var si = [
+        { value: 1, symbol: '' },
+        { value: 1E3, symbol: 'K' },
+        { value: 1E6, symbol: 'M' },
+        { value: 1E9, symbol: 'B' },
+        { value: 1E12, symbol: 'T' },
+        { value: 1E15, symbol: 'P' },
+        { value: 1E18, symbol: 'E' }
+    ];
+    var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+    var i;
+    for (i = si.length - 1; i > 0; i--) {
+        if (num >= si[i].value) {
+            break;
         }
-        return (num / si[i].value).toFixed(digits).replace(rx, '$1') + si[i].symbol;
     }
+    return (num / si[i].value).toFixed(digits).replace(rx, '$1') + si[i].symbol;
 }

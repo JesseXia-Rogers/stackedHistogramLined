@@ -17,6 +17,5 @@ export declare class D3Visual {
     formatData(): void;
     CreateVisualContainer(): void;
     private getRange;
-    private nFormatter;
 }
 export {};

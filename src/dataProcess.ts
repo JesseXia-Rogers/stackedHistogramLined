@@ -69,8 +69,6 @@ export function transformData(dataView: DataView): void {
         });
     });
 
-    console.log(series);
-
     D3Data.push(capacityData);
 
     // get regions

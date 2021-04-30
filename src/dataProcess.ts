@@ -7,6 +7,7 @@ import DataViewValueColumnGroup = powerbi.DataViewValueColumnGroup;
 import DataViewValueColumn = powerbi.DataViewValueColumn;
 import { D3Visual } from './d3Visual';
 import { ThresholdSettings } from './settings';
+import { format } from 'd3-format';
 
 
 export let LineValues: number[] = [];
@@ -51,8 +52,22 @@ export function transformData(dataView: DataView): void {
     const series: DataViewValueColumnGroup[] = dataView.categorical.values.grouped();
 
     const category: powerbi.DataViewCategoryColumn = dataView.categorical.categories[0];
-    let columns: PrimitiveValue[] = category.values;
-    columns = columns.map(col => col ?? '');
+    let columns = category.values;
+    let columnSource = category.source;
+    let format = columnSource.format;
+    columns = columns.map(col => {
+        col = col ?? '';
+
+        if (format && col != '') {
+            let date = new Date(col.toString());
+            let shortenYear = date.getFullYear().toString().substr(-2);
+            let month = Interfaces.MonthNames[date.getMonth()].toString().substr(0,3);
+
+            return month + '-' + shortenYear;
+        }
+
+        return col ?? ''
+    });
     Columns = columns;
 
     // insert capacity data into d3
@@ -78,11 +93,14 @@ export function transformData(dataView: DataView): void {
     });
 
     // get threshold
-    series[0].values.forEach(val => {
-        if (Object.keys(val.source.roles)[0] == 'Line Values') {
-            LineValues = val.values.map(d => <number>d);
-        }
-    })
+    series.forEach(serie => {
+        serie.values.forEach(val => {
+            if (Object.keys(val.source.roles)[0] == 'Line Values') {
+                LineValues.push(<number>val.values[0])
+            }
+        });
+    });
+
 
     // insert rest of data
     for (let idx = 0; idx < columns.length; ++idx) {
@@ -102,12 +120,16 @@ export function transformData(dataView: DataView): void {
         D3Data.push(data);
     }
 
+    // remove any columns with null or empty name
+    D3Data.forEach((data, idx) => {
+        if (!data.sharedAxis || data.sharedAxis == '') {
+            D3Data.splice(idx, 1);
+        }
+    });
+
+
     // set global numeric vars
     calculateNumerics(series);
-
-    console.log(series);
-    console.log(dataView);
-    console.log(DataNumeric)
 
     return;
 }

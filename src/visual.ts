@@ -53,6 +53,7 @@ export class Visual implements IVisual {
 
     public update(options: VisualUpdateOptions) {
         this._dataView = options.dataViews[0];
+        console.log(this._dataView )
         this._settings = VisualSettings.parse<VisualSettings>(options.dataViews[0]);
         
         const dataView = this._dataView;
@@ -62,6 +63,8 @@ export class Visual implements IVisual {
         }
         catch (e) {
             this._target.innerHTML = 'Fatal error: Unable to process the data! Check console for detail error message';
+            console.error(e)
+            return;
         }
         
         // get groupped values for series
@@ -133,8 +136,7 @@ export class Visual implements IVisual {
         
         const settings: VisualSettings = this._settings || <VisualSettings>VisualSettings.getDefault();
         let instances = VisualSettings.enumerateObjectInstances(settings, options);
-        return instances;
-        
+        return instances; 
     }
 
 
@@ -148,7 +150,9 @@ export class Visual implements IVisual {
                         return color;
                     }
                 }
-                catch (err) {}
+                catch (e) {
+                    console.error(e);
+                }
             }
         }
 

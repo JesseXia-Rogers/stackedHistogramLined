@@ -13,7 +13,6 @@ import { local, stack } from 'd3';
 // type
 type Selection<T extends d3.BaseType> = d3.Selection<T, any,any, any>;
 
-
 export class D3Visual {
     private _settings: VisualSettings;
     private _dataPointSeries: Interfaces.DataPointSerie[];
@@ -35,19 +34,20 @@ export class D3Visual {
             return;
         }
 
-
         // append the container to the parent element
         // remove previous children
         parent.innerHTML = null;
         
-        // init settings
+        // initiate settings
         this.parent = parent;
         this._settings = settings;
         this._dataPointSeries = dataPointSeries;
         this._selectionManager = selectionManager;
         
         // format data based on settings
-        this.formatData();
+        if (this._settings.AxisSettings.XAxisCleanToggle) {
+            this.formatData();
+        }
 
         // initialize barchart dimensions
         this.dimension = {
@@ -63,7 +63,7 @@ export class D3Visual {
     }
 
     public formatData() {
-        
+        // console.log(dp.D3Data)
     }
 
     public CreateVisualContainer() {
@@ -159,7 +159,7 @@ export class D3Visual {
             d3.selectAll('.domain').remove();
             d3.selectAll('line')
             .attr('stroke-dasharray', '1,3')
-            .attr('stroke', '#d3d3d3')
+            .attr('stroke', 'grey')
             .attr('stroke-width', 1)
             .style('fill', this._settings.LabelSettings.YAxisValueColor)
             .style('font-family', this._settings.LabelSettings.YAxisValueFontFamily)
@@ -386,7 +386,7 @@ export class D3Visual {
         });
         
         // threshold
-        let thresholdValue: number = dp.LineValues[0] * dp.Series.length;
+        let thresholdValue: number = dp.LineValues.reduce((a, b) => a + b, 0);
 
         svg.selectAll('.lineValues')
         .data([dp.LineValues[0]])
@@ -414,15 +414,15 @@ export class D3Visual {
             let maxStackData: any[] = stackData[stackData.length - 1];
             maxStackData.forEach(data => {
                 let maxVal = data[1];
-
+                let sumBgWidth = Math.min(x.bandwidth(), 50);
                 // background
                 svg.append('rect')
-                .attr('width', x.bandwidth())
+                .attr('width', sumBgWidth)
                 .attr('height', 20)
                 .attr('fill', this._settings.LabelSettings.LabelBackgroundColor)
                 .attr('opacity', 0)
                 .attr('y', y(maxVal) - 20)
-                .attr('x', x(data.data.sharedAxis))
+                .attr('x', x(data.data.sharedAxis) + x.bandwidth()/2 - sumBgWidth/2)
                 .transition()
                 .ease(d3.easeQuadOut)
                 .duration(400)
@@ -459,7 +459,7 @@ export class D3Visual {
             growthSelect2 = growthSelect2 ? growthSelect2 : dp.Columns[dp.Columns.length - 1];
 
             // get top y position
-            let yPos = y(y.domain()[1] * 0.95);
+            let yPos = y(y.domain()[1]);
 
             // get growth 1 index 
             let growth1Index = -1;

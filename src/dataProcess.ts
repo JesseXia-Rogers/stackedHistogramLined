@@ -75,7 +75,7 @@ export function transformData(dataView: DataView): void {
         sharedAxis: 'Capacity'
     };
 
-    series.forEach(serie => {      
+    series.forEach(serie => {
         let serieName: PrimitiveValue = serie.name ?? '';
         serie.values.forEach(val => {
             if (Object.keys(val.source.roles)[0] == 'Capacities') {

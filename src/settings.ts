@@ -26,84 +26,164 @@
 
 "use strict";
 
-import * as dp from './dataProcess';
-import * as visual from './visual';
 import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
 export class VisualSettings extends DataViewObjectsParser {
-    public DataColors: DataColors = new DataColors();
-    public LabelSettings: LabelSettings = new LabelSettings();
+    public AxisLabelSettings: AxisLabelSettings = new AxisLabelSettings();
+    public DataLabelSettings: DataLabelSettings = new DataLabelSettings();
     public ThresholdSettings: ThresholdSettings = new ThresholdSettings();
-    public GrowthSettings: GrowthSettings = new GrowthSettings();
-    public AxisSettings: AxisSettings = new AxisSettings();
+    public PrimaryGrowthSettings: PrimaryGrowthSettings = new PrimaryGrowthSettings();
+    public SecondaryGrowthSettings: SecondaryGrowthSettings = new SecondaryGrowthSettings();
+    public LayoutSettings: LayoutSettings = new LayoutSettings();
+    public DataColors: DataColors = new DataColors();
+    public LegendSettings: LegendSettings = new LegendSettings();
+    public PrimaryLabelSettings: PrimaryLabelSettings = new PrimaryLabelSettings();
+    public PrimaryLineSettings: PrimaryLineSettings = new PrimaryLineSettings();
+    public SecondaryLabelSettings: SecondaryLabelSettings = new SecondaryLabelSettings();
+    public SecondaryLineSettings: SecondaryLineSettings = new SecondaryLineSettings();
+}
+
+// initializes default values for all settings
+
+export class LayoutSettings {
+    public ChartType: string = 'stacked';
+
+    public YMaxValue: number = 0;
+    public YAxisCount: number = 3;
+
+    public XAxisBarWhiteSpace: number = 0.3;
+
+    public ToggleGridLines: boolean = true;
+
+    public CapacityToggle: boolean = true;
+}
+
+export class AxisLabelSettings {
+    public DisplayUnits: string = 'auto';
+
+    public YAxisText: string = 'Value';
+    public XAxisText: string = 'Period';
+
+    public YAxisLabelToggle: boolean = false;
+    public XAxisLabelToggle: boolean = false;
+
+    public FontFamily: string = 'Calibri';
+
+    public AxisFontColor: string = '#000000';
+    public AxisFontSize: number = 13;
+
+    public AxisValueColor: string = '#000000';
+    public AxisValueFontSize: number = 11;
+
+    public AxisLabelAngle: number = 0;
 }
 
 export class DataColors {
-    // Default color
+    public seriesFontColor: string = '#000000';
     public seriesColor: string = '#000000';
 }
 
-export class AxisSettings {
-    public GroupedBars: boolean = false;
-    public ChartMargin: number = 40;
-    public LegendPosition: string = 'top';
-    public YMaxValue: number = 0;
-    public YAxisCount: number = 3;
-    public XAxisBarWhiteSpace: number = 0.3;
-    public XAxisCleanToggle: boolean = false;
+export class DataLabelSettings {
+    public DisplayUnits: string = 'auto';
+    public DisplayDigits: number = 1;
+
+    public FontFamily: string = 'Calibri';
+
+    public SumLabelToggle: boolean = true;
+    public SumLabelColor: string = '#000000';
+    public SumLabelFontSize: number = 10;
+    public SumLabelBackgroundColor: string = '#ffffff';
+
+    public BarLabelToggle: boolean = true;
+    public BarLabelColor: string = '#000000';
+    public BarLabelFontSize: number = 10;
 }
 
-export class LabelSettings {
-    public YAxisText: string = 'Value';
-    public YAxisColor: string = '#000000';
-    public YAxisFontFamily: string = 'Calibri';
-    public YAxisFontSize: number = 13;
-    public YAxisValueColor: string = '#000000';
-    public YAxisValueFontFamily: string = 'Calibri';
-    public YAxisValueFontSize: number = 11;
+export class LegendSettings {
+    public LegendPosition: string = 'top';
 
-    public XAxisText: string = 'Period';
-    public XAxisColor: string = '#000000';
-    public XAxisFontFamily: string = 'Calibri';
-    public XAxisFontSize: number = 13;
-    public XAxisValueColor: string = '#000000';
-    public XAxisValueFontFamily: string = 'Calibri';
-    public XAxisValueFontSize: number = 11;
-
-    public LabelColor: string = '#000000';
-    public LabelFontFamily: string = 'Calibri';
-    public LabelFontSize: number = 10;
-    public LabelBackgroundColor: string = '#ffffff';
-    public LabelToggle: boolean = true;
-
-    public LegendColor: string = '#000000';
-    public LegendFontFamily: string = 'Calibri';
-    public LegendFontSize: number = 13;
+    public FontColor: string = '#000000';
+    public FontFamily: string = 'Calibri';
+    public FontSize: number = 13;
 }
 
 export class ThresholdSettings {
-    public ThresholdLineThickness: number = 2;
-    public ThresholdLineColor: string = '#000000';
-    public ThresholdLineType: string = 'dashed';
+    public ThresholdToggle: boolean = true;
+    public LineThickness: number = 1;
+    public LineColor: string = '#FF0000';
+    public LineType: string = 'dashed';
 }
 
-export class GrowthSettings {
+export class PrimaryGrowthSettings {
+    public TogglePrimaryIndicators: boolean = true;
+
     public Selector1: string = '';
     public Selector2: string = '';
+}
+
+export class SecondaryGrowthSettings {
+    public ToggleSecondaryIndicator: boolean = true;
+
+    public Selector1: string = '';
+    public Selector2: string = '';
+
+    public SelectorsList: string = '';
+}
+
+export class PrimaryLabelSettings {
+    public LabelBackgroundColor: string = '#ffffff';
 
     public FontColor: string = '#000000';
     public FontFamily: string = 'Calibri';
     public FontSize: number = 11;
 
-    public LineColor: string = '#000000';
+    public BorderColor: string = '#808080';
+    public BorderSize: number = 1;
+
+    public LabelOffsetHeight: number = 0;
+    public LabelHeight: number = 10;
+    public LabelMinWidth: number = 20;
+
+    public ToggleBgShape: boolean = true;
+}
+
+export class PrimaryLineSettings {
+    public AlignIndicators: boolean = false;
+
+    public LineColor: string = '#808080';
     public LineOffsetHeight: number = 25;
-    public LineSize: number = 2;
-    
-    public LabelBackgroundColor: string = '#ffffff';
-    public LabelHeight: number = 20;
-    public LabelWidth: number = 50;
+    public LineSize: number = 1;
 
     public ArrowSize: number = 20;
-    public ArrowToggle: boolean = true;;
+    public ArrowToggle: boolean = true;
+}
+
+export class SecondaryLabelSettings {
+    public DisplaySide: string = 'right';
+
+    public xOffset: number = 40;
+
+    public LabelBackgroundColor: string = '#ffffff';
+
+    public BorderColor: string = '#808080';
+    public BorderSize: number = 1;
+
+    public FontColor: string = '#000000';
+    public FontFamily: string = 'Calibri';
+    public FontSize: number = 11;
+
+    public LabelHeight: number = 10;
+    public LabelMinWidth: number = 20;
+
+    public ToggleBgShape: boolean = true;
+}
+
+export class SecondaryLineSettings {
+    public LineColor: string = '#808080';
+    public LineType: string = 'dashed';
+    public LineSize: number = 1;
+
+    public ArrowSize: number = 20;
+    public ArrowToggle: boolean = false;
 }

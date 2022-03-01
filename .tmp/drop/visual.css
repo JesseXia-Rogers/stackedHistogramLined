@@ -65,6 +65,7 @@
   background-repeat: repeat-x;
   position: absolute;
   z-index: 201;
+  display: none;
 }
 .y-axis-tick-value {
   position: absolute;
@@ -187,4 +188,4 @@
 }
 
 
-/*# sourceMappingURL=visual.css.map*/
+/*# sourceMappingURL=https://localhost:8080/assets/visual.css.map*/

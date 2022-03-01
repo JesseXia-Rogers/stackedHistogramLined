@@ -1,65 +1,116 @@
 import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 export declare class VisualSettings extends DataViewObjectsParser {
-    DataColors: DataColors;
-    LabelSettings: LabelSettings;
+    AxisLabelSettings: AxisLabelSettings;
+    DataLabelSettings: DataLabelSettings;
     ThresholdSettings: ThresholdSettings;
-    GrowthSettings: GrowthSettings;
-    AxisSettings: AxisSettings;
+    PrimaryGrowthSettings: PrimaryGrowthSettings;
+    SecondaryGrowthSettings: SecondaryGrowthSettings;
+    LayoutSettings: LayoutSettings;
+    DataColors: DataColors;
+    LegendSettings: LegendSettings;
+    PrimaryLabelSettings: PrimaryLabelSettings;
+    PrimaryLineSettings: PrimaryLineSettings;
+    SecondaryLabelSettings: SecondaryLabelSettings;
+    SecondaryLineSettings: SecondaryLineSettings;
 }
-export declare class DataColors {
-    seriesColor: string;
-}
-export declare class AxisSettings {
-    GroupedBars: boolean;
-    ChartMargin: number;
-    LegendPosition: string;
+export declare class LayoutSettings {
+    ChartType: string;
     YMaxValue: number;
     YAxisCount: number;
     XAxisBarWhiteSpace: number;
-    XAxisCleanToggle: boolean;
+    ToggleGridLines: boolean;
+    CapacityToggle: boolean;
 }
-export declare class LabelSettings {
+export declare class AxisLabelSettings {
+    DisplayUnits: string;
     YAxisText: string;
-    YAxisColor: string;
-    YAxisFontFamily: string;
-    YAxisFontSize: number;
-    YAxisValueColor: string;
-    YAxisValueFontFamily: string;
-    YAxisValueFontSize: number;
     XAxisText: string;
-    XAxisColor: string;
-    XAxisFontFamily: string;
-    XAxisFontSize: number;
-    XAxisValueColor: string;
-    XAxisValueFontFamily: string;
-    XAxisValueFontSize: number;
-    LabelColor: string;
-    LabelFontFamily: string;
-    LabelFontSize: number;
-    LabelBackgroundColor: string;
-    LabelToggle: boolean;
-    LegendColor: string;
-    LegendFontFamily: string;
-    LegendFontSize: number;
+    YAxisLabelToggle: boolean;
+    XAxisLabelToggle: boolean;
+    FontFamily: string;
+    AxisFontColor: string;
+    AxisFontSize: number;
+    AxisValueColor: string;
+    AxisValueFontSize: number;
+    AxisLabelAngle: number;
 }
-export declare class ThresholdSettings {
-    ThresholdLineThickness: number;
-    ThresholdLineColor: string;
-    ThresholdLineType: string;
+export declare class DataColors {
+    seriesFontColor: string;
+    seriesColor: string;
 }
-export declare class GrowthSettings {
-    Selector1: string;
-    Selector2: string;
+export declare class DataLabelSettings {
+    DisplayUnits: string;
+    DisplayDigits: number;
+    FontFamily: string;
+    SumLabelToggle: boolean;
+    SumLabelColor: string;
+    SumLabelFontSize: number;
+    SumLabelBackgroundColor: string;
+    BarLabelToggle: boolean;
+    BarLabelColor: string;
+    BarLabelFontSize: number;
+}
+export declare class LegendSettings {
+    LegendPosition: string;
     FontColor: string;
     FontFamily: string;
     FontSize: number;
+}
+export declare class ThresholdSettings {
+    ThresholdToggle: boolean;
+    LineThickness: number;
+    LineColor: string;
+    LineType: string;
+}
+export declare class PrimaryGrowthSettings {
+    TogglePrimaryIndicators: boolean;
+    Selector1: string;
+    Selector2: string;
+}
+export declare class SecondaryGrowthSettings {
+    ToggleSecondaryIndicator: boolean;
+    Selector1: string;
+    Selector2: string;
+    SelectorsList: string;
+}
+export declare class PrimaryLabelSettings {
+    LabelBackgroundColor: string;
+    FontColor: string;
+    FontFamily: string;
+    FontSize: number;
+    BorderColor: string;
+    BorderSize: number;
+    LabelOffsetHeight: number;
+    LabelHeight: number;
+    LabelMinWidth: number;
+    ToggleBgShape: boolean;
+}
+export declare class PrimaryLineSettings {
+    AlignIndicators: boolean;
     LineColor: string;
     LineOffsetHeight: number;
     LineSize: number;
+    ArrowSize: number;
+    ArrowToggle: boolean;
+}
+export declare class SecondaryLabelSettings {
+    DisplaySide: string;
+    xOffset: number;
     LabelBackgroundColor: string;
+    BorderColor: string;
+    BorderSize: number;
+    FontColor: string;
+    FontFamily: string;
+    FontSize: number;
     LabelHeight: number;
-    LabelWidth: number;
+    LabelMinWidth: number;
+    ToggleBgShape: boolean;
+}
+export declare class SecondaryLineSettings {
+    LineColor: string;
+    LineType: string;
+    LineSize: number;
     ArrowSize: number;
     ArrowToggle: boolean;
 }

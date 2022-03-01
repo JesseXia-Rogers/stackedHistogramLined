@@ -14,8 +14,14 @@ export declare class D3Visual {
     svg: Selection<SVGElement>;
     legend: Selection<SVGElement>;
     constructor(parent: HTMLElement, settings: VisualSettings, dataPointSeries: Interfaces.DataPointSerie[], selectionManager: ISelectionManager);
-    formatData(): void;
     CreateVisualContainer(): void;
     private getRange;
+    private getIndex;
+    private getSum;
+    private getTextWidth;
+    private drawTriangle;
+    private drawText;
+    private drawEllipse;
+    private drawLine;
 }
 export {};

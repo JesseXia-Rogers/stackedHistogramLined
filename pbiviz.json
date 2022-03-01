@@ -4,18 +4,18 @@
         "displayName": "StackedHistogramLined",
         "guid": "stackedHistogramLined26F8DE7BF82D4BE7B654B878A184D90E",
         "visualClassName": "Visual",
-        "version": "1.0.0",
-        "description": "Stacked barchart for Rogers growth",
+        "version": "2.0.0",
+        "description": "Multipurpose column chart for Rogers growth",
         "supportUrl": "https://github.com/Benoolean/stackedHistogramLined",
         "gitHubUrl": ""
     },
-    "apiVersion": "2.6.0",
-    "author": {
-        "name": "Ben Xiao",
-        "email": "ben.xiao@rci.rogers.ca"
+    "apiVersion": "3.2.0",
+    "authors": {
+        "names": "Ben Xiao, Jesse Xia",
+        "email": "ben.xiao@rci.rogers.ca, jesse.xia@rci.rogers.ca"
     },
     "assets": {
-        "icon": "assets/icon.png"
+        "icon": "assets/chart logo2 small.png"
     },
     "externalJS": null,
     "style": "style/visual.less",

@@ -61,6 +61,7 @@ export interface DataPointSerie {
     selection: ISelectionId;
 
     seriesColor: string;
+    seriesFontColor: string;
 }
 
 export let MonthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

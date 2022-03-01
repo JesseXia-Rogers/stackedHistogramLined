@@ -8,6 +8,7 @@ import DataViewValueColumn = powerbi.DataViewValueColumn;
 import { D3Visual } from './d3Visual';
 import { ThresholdSettings } from './settings';
 import { format } from 'd3-format';
+import * as d3 from 'd3';
 
 
 export let LineValues: number[] = [];
@@ -51,13 +52,17 @@ export function transformData(dataView: DataView): void {
     
     const series: DataViewValueColumnGroup[] = dataView.categorical.values.grouped();
 
-    const category: powerbi.DataViewCategoryColumn = dataView.categorical.categories[0];
-    let columns = category.values;
+    // console.log(series)
+
+    const category: powerbi.DataViewCategoryColumn = dataView.categorical.categories[0]; // get initial data from powerbi
+    let columns = category.values; // creates variables to store and separate initial data
     let columnSource = category.source;
     let format = columnSource.format;
-    columns = columns.map(col => {
+    columns = columns.map(col => { // loops through every data point in the initial dataset
         col = col ?? '';
-
+        
+        // formats the data value to month-year
+        // ie Jul-21
         if (format && col != '') {
             let date = new Date(col.toString());
             let shortenYear = date.getFullYear().toString().substr(-2);
@@ -68,6 +73,7 @@ export function transformData(dataView: DataView): void {
 
         return col ?? ''
     });
+    
     Columns = columns;
 
     // insert capacity data into d3
@@ -85,6 +91,7 @@ export function transformData(dataView: DataView): void {
     });
 
     D3Data.push(capacityData);
+    // console.log(D3Data)
 
     // get regions
     series.forEach(serie => {      

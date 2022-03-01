@@ -45,5 +45,6 @@ export interface DataPointSerie {
     value: PrimitiveValue;
     selection: ISelectionId;
     seriesColor: string;
+    seriesFontColor: string;
 }
 export declare let MonthNames: string[];

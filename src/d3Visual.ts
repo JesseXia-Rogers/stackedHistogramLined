@@ -8,10 +8,10 @@ import * as d3 from 'd3';
 import powerbi from 'powerbi-visuals-api';
 import { VisualSettings } from './settings';
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
-import { local, stack } from 'd3';
+import { group, local, stack } from 'd3';
 
 // type
-type Selection<T extends d3.BaseType> = d3.Selection<T, any,any, any>;
+type Selection<T extends d3.BaseType> = d3.Selection<T, any, any, any>;
 
 export class D3Visual {
     private _settings: VisualSettings;
@@ -37,17 +37,12 @@ export class D3Visual {
         // append the container to the parent element
         // remove previous children
         parent.innerHTML = null;
-        
+
         // initiate settings
         this.parent = parent;
         this._settings = settings;
         this._dataPointSeries = dataPointSeries;
         this._selectionManager = selectionManager;
-        
-        // format data based on settings
-        if (this._settings.AxisSettings.XAxisCleanToggle) {
-            this.formatData();
-        }
 
         // initialize barchart dimensions
         this.dimension = {
@@ -62,11 +57,19 @@ export class D3Visual {
         this.CreateVisualContainer();
     }
 
-    public formatData() {
-        // console.log(dp.D3Data)
-    }
-
     public CreateVisualContainer() {
+        // gets settings
+        const LAYOUT_SETTINGS = this._settings.LayoutSettings;
+        const AXIS_LABEL_SETTINGS = this._settings.AxisLabelSettings;
+        const DATA_LABEL_SETTINGS = this._settings.DataLabelSettings;
+        const LEGEND_SETTINGS = this._settings.LegendSettings;
+        const THRESHOLD_SETTINGS = this._settings.ThresholdSettings;
+        const PRIMARY_GROWTH_SETTINGS = this._settings.PrimaryGrowthSettings;
+        const PRIMARY_LABEL_SETTINGS = this._settings.PrimaryLabelSettings;
+        const PRIMARY_LINE_SETTINGS = this._settings.PrimaryLineSettings;
+        const SECONDARY_GROWTH_SETTINGS = this._settings.SecondaryGrowthSettings;
+        const SECONDARY_LABEL_SETTINGS = this._settings.SecondaryLabelSettings;
+        const SECONDARY_LINE_SETTINGS = this._settings.SecondaryLineSettings;
 
         // create visual container
         this.container = document.createElement('div');
@@ -80,223 +83,369 @@ export class D3Visual {
         legendSelector.setAttribute('class', 'legend-selector');
         legendSelector.style.height = this.container.offsetHeight + 'px';
         this.container.appendChild(legendSelector);
+
         let legendSvg = d3.select(legendSelector)
-        .append('svg')
-        .classed('legend-svg', true)
-        .attr('width', '100%')
-        .attr('height', this.container.offsetHeight)
-        .style('position', 'absolute');
+            .append('svg')
+            .classed('legend-svg', true)
+            .attr('width', '100%')
+            .attr('height', this.container.offsetHeight)
+            .style('position', 'absolute');
 
         // get svg by selecting container
         let svgSelector = document.createElement('div');
         svgSelector.setAttribute('class', 'svg-selector');
         svgSelector.style.height = this.container.offsetHeight + 'px';
         this.container.appendChild(svgSelector)
+
         let svg = d3.select(svgSelector)
-        .append('svg')
-        .classed('visual-svg', true);
+            .append('svg')
+            .classed('visual-svg', true);
 
         this.svg = svg;
 
         // get and set svg attr
-        let width = svgSelector.offsetWidth - 85;
-        let height = svgSelector.offsetHeight - 100;
+        let xPadding = 85;
+        let yPadding = 70;
+        let width = svgSelector.offsetWidth - xPadding;
+        let height = svgSelector.offsetHeight - yPadding;
         let marginTop = 40;
 
-        if (this._settings.AxisSettings.LegendPosition == 'bottom') {
-            height = this.dimension.height - 100;
+        let legendMargin = 70;
+        if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
+            height = this.dimension.height - legendMargin;
             marginTop = 20;
         }
 
         svg.attr('width', width)
-        .attr('height', height)
-        .style('margin-top', `${marginTop}px`)
-        .attr('overflow', 'visible');
+            .attr('height', height)
+            .style('margin-top', `${marginTop}px`)
+            .attr('overflow', 'visible');
+
+        // removes capacity if 0 or toggled off
+        // capacity is assumed to always be the first column
+        let hasCapacity = true;
+        if (!LAYOUT_SETTINGS.CapacityToggle || !this.getSum(0)) {
+            hasCapacity = false;
+            dp.D3Data.shift();
+        }
 
         // set x axis values
         let x = d3.scaleBand()
-        .domain(dp.D3Data.map(data => data.sharedAxis))
-        .range([0, width])
-        .padding(this._settings.AxisSettings.XAxisBarWhiteSpace);
-        
+            .domain(dp.D3Data.map(data => data.sharedAxis))
+            .range([0, width])
+            .padding(LAYOUT_SETTINGS.XAxisBarWhiteSpace);
+
         // set x axis
         let xAxis = d3.axisBottom(x);
 
         // set x axis g
         let xAxisG = svg.append('g')
-        .classed('x-axis-g', true);
+            .classed('x-axis-g', true);
 
         // create x axis attr call
         let setXAxisGAttr = g => {
-            g.selectAll('.domain').remove();    
+            g.selectAll('.domain').remove();
             g.selectAll('line').remove();
             g.selectAll('text')
-            .attr('transform', `translate(-${x.bandwidth() / 2}, 0) rotate(-45)`)
-            .style('text-anchor', 'end')
-            .style('fill', this._settings.LabelSettings.XAxisValueColor)
-            .style('font-family', this._settings.LabelSettings.XAxisValueFontFamily)
-            .style('font-size', this._settings.LabelSettings.XAxisValueFontSize)
+                .attr('transform', `rotate(-${AXIS_LABEL_SETTINGS.AxisLabelAngle})`)
+                .style('text-anchor', AXIS_LABEL_SETTINGS.AxisLabelAngle ? 'end' : 'middle')
+                .style('fill', AXIS_LABEL_SETTINGS.AxisValueColor)
+                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
+                .style('font-size', AXIS_LABEL_SETTINGS.AxisValueFontSize);
         }
 
         // set y axis value
         let y = d3.scaleLinear()
-        .domain([0, 500])
-        .range([height, 0])
+            .domain([0, 500])
+            .range([height, 0]);
 
         // set y axis
         let yAxis = d3.axisLeft(y)
-        .tickSize(-width)
-        .tickFormat(data => {
-            return data.toString()
-        });
+            .tickSize(-width)
+            .tickFormat(data => {
+                // formats y-axis labels with appropriate units
+                return nFormatter(parseInt(data.toString()), 3, AXIS_LABEL_SETTINGS.DisplayUnits);
+            });
 
         // set y axis g
         let yAxisG = svg.append('g')
-        .classed('y-axis-g', true);
+            .classed('y-axis-g', true);
 
         // create y axis attr call
         let setYAxisGAttr = _ => {
             d3.selectAll('.domain').remove();
             d3.selectAll('line')
-            .attr('stroke-dasharray', '1,3')
-            .attr('stroke', 'grey')
-            .attr('stroke-width', 1)
-            .style('fill', this._settings.LabelSettings.YAxisValueColor)
-            .style('font-family', this._settings.LabelSettings.YAxisValueFontFamily)
-            .style('font-size', this._settings.LabelSettings.YAxisValueFontSize)
+                .attr('stroke-dasharray', '1,3')
+                .attr('stroke', 'grey')
+                .attr('stroke-width', +LAYOUT_SETTINGS.ToggleGridLines)
+                .style('fill', AXIS_LABEL_SETTINGS.AxisValueColor)
+                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
+                .style('font-size', AXIS_LABEL_SETTINGS.AxisValueFontSize);
         }
-        
+
         // render x axis
         xAxisG.attr('transform', `translate(0, ${height})`)
-        .call(xAxis)
-        .call(setXAxisGAttr);     
-        
+            .call(xAxis)
+            .call(setXAxisGAttr);
+
         // render y axis
-        yAxisG.call(yAxis.ticks(this._settings.AxisSettings.YAxisCount))
-        .call(setYAxisGAttr);
+        yAxisG.call(yAxis.ticks(LAYOUT_SETTINGS.YAxisCount))
+            .call(setYAxisGAttr);
         d3.select('line')
-        .filter((d, i) => i == 0)
-        .remove();
+            .filter((d, i) => i == 0)
+            .remove();
+
+        // x axis label
+        if (AXIS_LABEL_SETTINGS.XAxisLabelToggle) {
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + 40)
+                .style('fill', AXIS_LABEL_SETTINGS.AxisFontColor)
+                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
+                .style('font-size', AXIS_LABEL_SETTINGS.AxisFontSize)
+                .text(AXIS_LABEL_SETTINGS.XAxisText);
+        }
+
+        // y axis label
+        if (AXIS_LABEL_SETTINGS.YAxisLabelToggle) {
+            svg.append('text')
+                .attr('x', 0)
+                .attr('y', height / 2)
+                .attr('transform', 'rotate(-90)')
+                .style('fill', AXIS_LABEL_SETTINGS.AxisFontColor)
+                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
+                .style('font-size', AXIS_LABEL_SETTINGS.AxisFontSize)
+                .text(AXIS_LABEL_SETTINGS.YAxisText);
+        }
+
+        // hide origin label
+        // values are mostly hard-coded in, not sure if there's a better way
+        svg.append('rect')
+            .attr('width', AXIS_LABEL_SETTINGS.AxisValueFontSize)
+            .attr('height', AXIS_LABEL_SETTINGS.AxisValueFontSize)
+            .attr('fill', '#ffffff')
+            .attr('y', height - 6)
+            .attr('x', -AXIS_LABEL_SETTINGS.AxisValueFontSize);
 
         // generate stack
         let serieStack = d3.stack().keys(dp.Series);
         let stackData = serieStack(dp.D3Data);
+        // console.log(stackData)
 
         // create legend
-        let legendRectHeight = 10;
-        let legendRectWidth = 90;
+        let legendRectHeight = 15;
+        let legendHorizontalPadding = 30;
+
         let legend = legendSvg.selectAll('.legend')
-        .data(stackData)
-        .enter()
-        .append('g')
-        .classed('legend', true)
-        .attr('transform', (_, i) => { 
-            let n = dp.Series.length;
-            return 'translate(' + i % n * legendRectWidth + ',' + Math.floor( i / n) * legendRectHeight + ')'; 
+            .data(stackData)
+            .enter()
+            .append('g')
+            .classed('legend', true);
+
+        let legendWidth = 0;
+
+        // true width gets actual width of chart 
+        // useful for secondary growth indicator and legend
+        let trueWidth = width + xPadding;
+
+        // calculates text width for each name based on font size and family
+        dp.Series.forEach(serieName => {
+            // gets width
+            let nameWidth = this.getTextWidth(serieName, LEGEND_SETTINGS);
+
+            // calculates legend width
+            legendWidth += nameWidth + legendHorizontalPadding;
         });
 
-        let legendColor = legend.append('rect')
-        .attr('width',10)
-        .attr('height',10)
-        .attr('y', 0)
-        .attr('fill', d => this._dataPointSeries[d.index].seriesColor);
-    
-        let legendText = legend.append('text')
-        .attr('x', 15)
-        .attr('y', 10)
-        .style('fill', this._settings.LabelSettings.LegendColor)
-        .style('font-family', this._settings.LabelSettings.LegendFontFamily)
-        .style('font-size', this._settings.LabelSettings.LegendFontSize)
-        .text(d => d.key);
+        // checks if legend exceeds chart borders
+        legendWidth = legendWidth > trueWidth ? trueWidth : legendWidth;
 
-        if (this._settings.AxisSettings.LegendPosition == 'bottom') {
+        // currwidth determines current horizontal position of legend labels
+        let currWidth = 0;
+        // row for legend wrapping, determines what row to place label on
+        let row = 0;
+
+        // displays legend based on selected position
+        // left: starting top left, display vertically
+        if (LEGEND_SETTINGS.LegendPosition == 'left') {
+
+            // places each legend label
+            legend.attr('transform', (_, i) => {
+
+                // displays each label below previous label
+                let n = dp.Series.length;
+                return 'translate(0,' + (i % n * legendRectHeight) + ')';
+            });
+
+        } else {
+            // bottom: display at bottom center of chart
+            if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
+                // centers legend
+                let centerOffset = (trueWidth - legendWidth) / 2;
+                currWidth = centerOffset;
+            }
+
+            // top: starting top left, display horizontally
+            // places each legend label
+            legend.attr('transform', serie => {
+                let nameWidth = this.getTextWidth(serie.key, LEGEND_SETTINGS);
+
+                // allows legend wrapping
+                if (currWidth + nameWidth + legendHorizontalPadding > trueWidth) {
+                    // increments row if legend exceeds chart borders
+                    row++;
+                    // resets width
+                    currWidth = 0;
+                }
+                // displays each label at current width, height is determined using the row
+                let t = 'translate(' + currWidth + ',' + row * legendRectHeight + ')';
+
+                // increments width
+                currWidth += nameWidth + legendHorizontalPadding;
+                return t;
+            });
+        }
+
+        // adds squares for serie colours
+        let legendColor = legend.append('rect')
+            .attr('width', 10)
+            .attr('height', 10)
+            .attr('y', 0)
+            .attr('fill', d => this._dataPointSeries[d.index].seriesColor);
+
+        // adds legend text
+        let legendText = legend.append('text')
+            .attr('x', 15)
+            .attr('y', 10)
+            .style('fill', LEGEND_SETTINGS.FontColor)
+            .style('font-family', LEGEND_SETTINGS.FontFamily)
+            .style('font-size', LEGEND_SETTINGS.FontSize)
+            .text(d => d.key);
+
+        // places legend at bottom of chart
+        if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
             legendColor.attr('y', legendSelector.offsetHeight - 10);
             legendText.attr('y', legendSelector.offsetHeight);
         }
 
         // hover info text
         let hoverInfoDiv = d3.select('body')
-        .append('div')
-        .classed('hoverInfoDiv', true)
-        .style('opacity', 0)
-        .style('position', 'absolute')
-        .style('top', 0)
-        .style('color', '#fff')
-        .style('font-size', '11px')
-        .on('mouseover', function() {
-            let selected = d3.select(this);
-            selected.style('display', 'none');
-        });
+            .append('div')
+            .classed('hoverInfoDiv', true)
+            .style('opacity', 0)
+            .style('position', 'absolute')
+            .style('top', 0)
+            .style('color', '#fff')
+            .style('font-size', '11px')
+            .on('mouseover', function () {
+                let selected = d3.select(this);
+                selected.style('display', 'none');
+            });
+
+        let displayUnits = DATA_LABEL_SETTINGS.DisplayUnits;
+        let displayDigits = DATA_LABEL_SETTINGS.DisplayDigits;
 
         // iterate through each serie stack
         stackData.forEach((serie, idx) => {
             // create bar
-            let bar =  svg.selectAll('.bar')
-            .enter()
-            .data(serie)
-            .join('rect')
-            .classed('bar', true)
-            .attr('fill', this._dataPointSeries[serie.index].seriesColor)
-            .attr('width', x.bandwidth())
-            .attr('x', data => x(data.data.sharedAxis.toString()))
-            .attr('y', 0)
-            .attr('height', 0)
-            .attr('opacity', 1)
-            .attr('serie', dp.Series[idx])
-            .attr('xIdx', (_, i) => i);
+            let bar = svg.selectAll('.bar')
+                .enter()
+                .data(serie)
+                .join('rect')
+                .classed('bar', true)
+                .attr('fill', this._dataPointSeries[serie.index].seriesColor)
+                .attr('width', x.bandwidth())
+                .attr('x', data => x(data.data.sharedAxis.toString()))
+                .attr('serie', dp.Series[idx])
+                .attr('xIdx', (_, i) => i);
 
-            // set bar transition
-            if (this._settings.AxisSettings.GroupedBars) {
+            // create label on each bar
+            let barLabel = null;
+            let serieFontColor = this._dataPointSeries[serie.index].seriesFontColor;
+
+            if (DATA_LABEL_SETTINGS.BarLabelToggle) {
+                barLabel = svg.selectAll('.label')
+                    .data(serie)
+                    .enter()
+                    .append('text')
+                    .attr('width', x.bandwidth())
+                    .attr('height', DATA_LABEL_SETTINGS.BarLabelFontSize)
+                    .attr('fill', serieFontColor != '#000000' ? serieFontColor : DATA_LABEL_SETTINGS.BarLabelColor)
+                    .attr('font-size', DATA_LABEL_SETTINGS.BarLabelFontSize)
+                    .attr('font-family', DATA_LABEL_SETTINGS.FontFamily)
+                    .attr('text-anchor', 'middle')
+                    .attr('dominant-baseline', 'middle');
+
+                if (LAYOUT_SETTINGS.ChartType == 'clustered') {
+                    barLabel.attr('x', data => x(data.data.sharedAxis.toString()));
+                } else {
+                    // adds offset to account for bar positions
+                    barLabel.attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / 2);
+                }
+            }
+
+            let yMax = LAYOUT_SETTINGS.YMaxValue;
+
+            if (LAYOUT_SETTINGS.ChartType == 'clustered') {
                 // find local max
                 let localRange = this.getRange().max;
 
                 // transition y axis
-                y.domain([0, Math.max(localRange, this._settings.AxisSettings.YMaxValue)])
-                yAxisG.transition()
-                .duration(2000)
-                .call(yAxis)
-                .call(setYAxisGAttr);
+                y.domain([0, yMax ? yMax : localRange]);
+                yAxisG.call(yAxis)
+                    .call(setYAxisGAttr);
 
+                // set bar positions + height
                 bar.data(serie)
-                .transition()
-                .ease(d3.easeQuadOut)
-                .duration(0)
-                .delay(400)
-                .attr('x', data=> x(data.data.sharedAxis.toString()) + x.bandwidth() / 3 * idx)
-                .attr('width', x.bandwidth() / dp.Series.length)
-                .attr('height', 0)
+                    .attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx)
+                    .attr('width', x.bandwidth() / dp.Series.length)
+                    .attr('y', data => y(data[1] - data[0]))
+                    .attr('height', data => y(data[0]) - y(data[1]));
 
-                // second transition
-                .transition()
-                .ease(d3.easeQuadOut)
-                .duration(500)
-                .attr('y', data => y(data[1] - data[0]))
-                .attr('height', data => y(data[0]) -  y(data[1]));
+                // show text if bar height allows
+                if (DATA_LABEL_SETTINGS.BarLabelToggle) {
+                    barLabel.text(data => {
+                        let val = data.data[dp.Series[idx]];
+                        let barHeight = y(data[0]) - y(data[1]);
+
+                        return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
+                    });
+
+                    barLabel.attr('opacity', '1')
+                        .attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx + x.bandwidth() / dp.Series.length / 2)
+                        .attr('y', data => height - (y(data[0]) - y(data[1])) / 2);
+                }
             }
             else {
-                // transition y axis
-                y.domain([0, Math.max(Math.ceil(dp.DataNumeric.max * 1.2), this._settings.AxisSettings.YMaxValue)])
-                yAxisG.transition()
-                .duration(2000)
-                .call(yAxis)
-                .call(setYAxisGAttr);
+                y.domain([0, yMax ? yMax : Math.max(Math.ceil(dp.DataNumeric.max * 1.2))]);
+                yAxisG.call(yAxis)
+                    .call(setYAxisGAttr);
 
+                // set bar heights
                 bar.data(serie)
-                .transition()
-                .ease(d3.easeQuadOut)
-                .duration(500)
-                .delay(400)
-                .attr('y', data => y(data[1]))
-                .attr('height', data => y(data[0]) -  y(data[1]));
+                    .attr('y', data => y(data[1]))
+                    .attr('height', data => y(data[0]) - y(data[1]));
+
+                // show text if bar height allows
+                if (DATA_LABEL_SETTINGS.BarLabelToggle) {
+                    barLabel.text(data => {
+                        let val = data.data[dp.Series[idx]];
+                        let barHeight = y(data[0]) - y(data[1]);
+
+                        return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
+                    });
+
+                    barLabel.attr('y', data => y(data[0]) - (y(data[0]) - y(data[1])) / 2);
+                }
             }
 
             // get mouse hover
-            bar.on('mouseover', function(data) {
+            bar.on('mouseover', function (data) {
                 let selected = d3.select(this);
                 let serie: string = selected.attr('serie');
                 let xIdxAttr: string = selected.attr('xIdx');
                 let xIdx: number = -1;
-                let hoverWidth = 100;
+
                 try {
                     xIdx = parseInt(xIdxAttr);
                 }
@@ -320,9 +469,7 @@ export class D3Visual {
                     return;
                 }
 
-               
-                // hoverInfo.raise();
-                let eventTarget: HTMLElement = d3.event.target; 
+                let eventTarget: HTMLElement = d3.event.target;
                 if (!eventTarget) {
                     console.error('Unable to get event target');
                     return;
@@ -333,18 +480,18 @@ export class D3Visual {
                 let padding = 10;
 
                 hoverInfoDiv.transition()
-                .duration(400)
-                .style('display', 'block')
-                .style('opacity', 1)
-                .style('background-color', 'grey')
-                .style('padding', padding + 'px');
+                    .duration(400)
+                    .style('display', 'block')
+                    .style('opacity', 1)
+                    .style('background-color', 'grey')
+                    .style('padding', padding + 'px');
 
                 let summaryText = '';
 
                 // reverse to match order of bars
                 Object.keys(data.data).reverse().forEach(key => {
                     if (key != 'sharedAxis') {
-                        let text = key + ': ' + nFormatter(data.data[key], 1)  + '<br>';
+                        let text = key + ': ' + nFormatter(data.data[key], displayDigits, displayUnits) + '<br>';
                         if (key == serie) {
                             text = '<u>' + text + '</u>';
                         }
@@ -357,13 +504,13 @@ export class D3Visual {
 
                 // text
                 hoverInfoDiv.html(
-                    data.data.sharedAxis + 
-                    `<br>` + 
+                    data.data.sharedAxis +
+                    `<br>` +
                     summaryText
                 );
 
                 let xPosOffset = x.bandwidth() * 1.5;
-                if (xIdx > (dp.D3Data.length * (2/3))) {
+                if (xIdx > (dp.D3Data.length * (2 / 3))) {
                     xPosOffset = - hoverInfoDiv.node().offsetWidth - (x.bandwidth() / 2);
                 }
                 posX += xPosOffset;
@@ -374,201 +521,549 @@ export class D3Visual {
                 let maxTop = bodyHeight - hoverInfoDiv.node().offsetHeight;
 
                 hoverInfoDiv.style('left', posX + 'px')
-                .style('top', Math.min(posY, maxTop) + 'px');
+                    .style('top', Math.min(posY, maxTop) + 'px');
             })
-            .on('mouseout', function(_) {
-                hoverInfoDiv.transition()
-                .duration(100)
-                .attr('width', 0)
-                .attr('height', 0)
-                .style('opacity', 0)
-            });
+                .on('mouseout', function (_) {
+                    hoverInfoDiv.transition()
+                        .duration(100)
+                        .attr('width', 0)
+                        .attr('height', 0)
+                        .style('opacity', 0)
+                });
         });
-        
+
         // threshold
-        let thresholdValue: number = dp.LineValues.reduce((a, b) => a + b, 0);
+        if (THRESHOLD_SETTINGS.ThresholdToggle) {
+            let thresholdValue: number = dp.LineValues.reduce((a, b) => a + b, 0);
 
-        svg.selectAll('.lineValues')
-        .data([dp.LineValues[0]])
-        .enter()
-        .append('line')
-        .classed('lineValues', true)
-        .attr('fill', 'none')
-        .attr('stroke', this._settings.ThresholdSettings.ThresholdLineColor)
-        .attr('stroke-width', this._settings.ThresholdSettings.ThresholdLineThickness)
-        .attr('x1', 0)
-        .attr('y1', y(thresholdValue))
-        .attr('x2', width)
-        .attr('y2', y(thresholdValue));
-
-        if (this._settings.ThresholdSettings.ThresholdLineType == 'dashed') {
             svg.selectAll('.lineValues')
-            .attr('stroke-dasharray', '5,4');
+                .data([dp.LineValues[0]])
+                .enter()
+                .append('line')
+                .classed('lineValues', true)
+                .attr('fill', 'none')
+                .attr('stroke', THRESHOLD_SETTINGS.LineColor)
+                .attr('stroke-width', THRESHOLD_SETTINGS.LineThickness)
+                .attr('x1', 0)
+                .attr('y1', y(thresholdValue))
+                .attr('x2', width)
+                .attr('y2', y(thresholdValue));
+
+            // sets line type
+            if (THRESHOLD_SETTINGS.LineType == 'dashed') {
+                svg.selectAll('.lineValues')
+                    .attr('stroke-dasharray', '5,4');
+            }
         }
 
         // bar summation label
-        if (this._settings.LabelSettings.LabelToggle && 
-            this.container.offsetWidth > 800 &&
-            this._settings.AxisSettings.XAxisBarWhiteSpace < 0.5) {
+        if (DATA_LABEL_SETTINGS.SumLabelToggle &&
+            LAYOUT_SETTINGS.ChartType == 'stacked') {
 
+            // gets summation values for each column
             let maxStackData: any[] = stackData[stackData.length - 1];
+
             maxStackData.forEach(data => {
                 let maxVal = data[1];
-                let sumBgWidth = Math.min(x.bandwidth(), 50);
-                // background
-                svg.append('rect')
-                .attr('width', sumBgWidth)
-                .attr('height', 20)
-                .attr('fill', this._settings.LabelSettings.LabelBackgroundColor)
-                .attr('opacity', 0)
-                .attr('y', y(maxVal) - 20)
-                .attr('x', x(data.data.sharedAxis) + x.bandwidth()/2 - sumBgWidth/2)
-                .transition()
-                .ease(d3.easeQuadOut)
-                .duration(400)
-                .delay(1000)
-                .attr('opacity', '1');
 
-                // text
-                svg.append('text')
-                .attr('width', x.bandwidth())
-                .attr('height', 20)
-                .attr('fill', this._settings.LabelSettings.LabelColor)
-                .attr('opacity', 0)
-                .attr('font-size', this._settings.LabelSettings.LabelFontSize)
-                .attr('font-family', this._settings.LabelSettings.LabelFontFamily)
-                .attr('text-anchor', 'middle')
-                .attr('dominant-baseline', 'middle')
-                .attr('y', y(maxVal) - 10)
-                .attr('x', x(data.data.sharedAxis) + x.bandwidth()/2)
-                .text(nFormatter(maxVal, 1))
-                .transition()
-                .ease(d3.easeQuadOut)
-                .duration(400)
-                .delay(700)
-                .attr('opacity', '1');
-            })
+                // display value if not 0
+                if (maxVal) {
+                    let text = nFormatter(maxVal, displayDigits, displayUnits);
+
+                    // display value if bar width allows
+                    if (x.bandwidth() > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
+
+                        // background
+                        let sumBgWidth = x.bandwidth();
+
+                        svg.append('rect')
+                            .attr('width', sumBgWidth)
+                            .attr('height', 20)
+                            .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
+                            .attr('y', y(maxVal) - 20)
+                            .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
+
+                        // text
+                        svg.append('text')
+                            .attr('width', x.bandwidth())
+                            .attr('height', 20)
+                            .attr('fill', DATA_LABEL_SETTINGS.SumLabelColor)
+                            .attr('font-size', DATA_LABEL_SETTINGS.SumLabelFontSize)
+                            .attr('font-family', DATA_LABEL_SETTINGS.FontFamily)
+                            .attr('text-anchor', 'middle')
+                            .attr('dominant-baseline', 'middle')
+                            .attr('y', y(maxVal) - 10)
+                            .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2)
+                            .text(text);
+                    }
+                }
+            });
         }
 
-        // growth
-        if (!this._settings.AxisSettings.GroupedBars) {
-            // growth
-            let growthSelect1 = this._settings.GrowthSettings.Selector1;
-            let growthSelect2 = this._settings.GrowthSettings.Selector2;
-            growthSelect1 = growthSelect1 ? growthSelect1 : dp.D3Data[0].sharedAxis;
-            growthSelect2 = growthSelect2 ? growthSelect2 : dp.Columns[dp.Columns.length - 1];
+        // growth indicator
+        if (LAYOUT_SETTINGS.ChartType == 'stacked') {
 
-            // get top y position
-            let yPos = y(y.domain()[1]);
+            // creates default selector, sets to most recent non-zero column
+            let lastIdx = dp.D3Data.length - 1;
+            let lastSum = 0;
 
-            // get growth 1 index 
-            let growth1Index = -1;
-            dp.D3Data.forEach((data, idx) => {
-                if (data.sharedAxis == growthSelect1) {
-                    growth1Index = idx;
-                }
-            });
+            // iterates over columns starting from last column, returns first-from-last non-zero column
+            while (lastIdx >= 0) {
+                lastSum = this.getSum(lastIdx);
+                if (lastSum)
+                    break;
 
-            // get growth 2 index
-            let growth2Index = -1;
-            dp.D3Data.forEach((data, idx) => {
-                if (data.sharedAxis == growthSelect2) {
-                    growth2Index = idx;
-                }
-            });
-
-            // sanity check
-            if (growth1Index == -1 || growth2Index == -1) {
-                this.parent.innerHTML = 'Growth Selector not correct';
-                return;
+                lastIdx--;
             }
 
-            // get growth 1 sum
-            let growth1Sum = 0;
-            dp.Series.forEach(serie => {
-                growth1Sum += dp.D3Data[growth1Index][serie]
-            });
+            // finds equivalent growth selector for returned non-zero column
+            let lastSelect = dp.D3Data[lastIdx].sharedAxis;
 
-            // get growth 2 sum
-            let growth2Sum = 0;
-            dp.Series.forEach(serie => {
-                growth2Sum += dp.D3Data[growth2Index][serie]
-            });
-            let heightOffset = this._settings.GrowthSettings.LineOffsetHeight;
-            
-            try {
-                let growth1Y = y(growth1Sum) - heightOffset;
-                let growth1X = x(growthSelect1) + x.bandwidth() / 2;
-                let growth2Y = y(growth2Sum) - heightOffset;
-                let growth2X = x(growthSelect2) + x.bandwidth() / 2;
+            // draws primary growth indicators
+            if (PRIMARY_GROWTH_SETTINGS.TogglePrimaryIndicators) {
+                // get growth selectors
+                let primarySelect1 = PRIMARY_GROWTH_SETTINGS.Selector1;
+                let primarySelect2 = PRIMARY_GROWTH_SETTINGS.Selector2;
 
-                let path = d3.line()([
-                    [growth1X, growth1Y], 
-                    [growth1X, yPos],
-                    [growth2X, yPos],
-                    [growth2X, growth2Y]]);
-                
-                // draw line
-                svg.append('path')
-                .classed('growthLine', true)
-                .attr('fill', 'none')
-                .attr('stroke', this._settings.GrowthSettings.LineColor)
-                .attr('stroke-width', this._settings.GrowthSettings.LineSize)
-                .attr('d', path);
+                // define serie index and sum
+                let primGrowth2Sum = 0;
+                let primGrowth2Index = -1;
 
-                if (this._settings.GrowthSettings.ArrowToggle) {
-                    // draw triangle1
-                    svg.append('path')
-                    .attr('d', d3.symbol().type(d3.symbolTriangle).size(
-                        this._settings.GrowthSettings.ArrowSize
-                    ))
-                    .attr('fill', this._settings.GrowthSettings.LineColor)
-                    .attr('transform', `translate(${growth1X}, ${growth1Y}) rotate(60)`);   
-                    
-                    // draw triangle2
-                    svg.append('path')
-                    .attr('d', d3.symbol().type(d3.symbolTriangle).size(
-                        this._settings.GrowthSettings.ArrowSize
-                    ))
-                    .attr('fill', this._settings.GrowthSettings.LineColor)
-                    .attr('transform', `translate(${growth2X}, ${growth2Y}) rotate(60)`);
-                }   
+                // finds second growth selector if growth selector is specified, otherwise, use default value
+                if (primarySelect2) {
+                    // get growth 2 index
+                    primGrowth2Index = this.getIndex(primarySelect2);
 
-                // draw label
-                let averageX = (growth1X + growth2X) / 2;
-                let labelRectWidth = this._settings.GrowthSettings.LabelWidth;
-                let labelRectHeight = this._settings.GrowthSettings.LabelHeight;
-                svg.append('rect')
-                .attr('width', labelRectWidth)
-                .attr('height', labelRectHeight)
-                .attr('fill', this._settings.GrowthSettings.LabelBackgroundColor)
-                .attr('stroke-width', this._settings.GrowthSettings.LineSize)
-                .attr('stroke', this._settings.GrowthSettings.LineColor)
-                .attr('y', yPos - labelRectHeight / 2)
-                .attr('x', averageX - labelRectWidth / 2)
+                    // get growth 2 sum
+                    primGrowth2Sum = this.getSum(primGrowth2Index);
 
-                // draw label text
-                let growthValue = (1 - growth2Sum / growth1Sum) * 100;
-                let growthValueRounded = Math.round(growthValue * 10) / 10 + '%'
-                svg.append('text')
-                .attr('width', labelRectWidth)
-                .attr('height', labelRectHeight)
-                .attr('fill', this._settings.GrowthSettings.FontColor)
-                .attr('font-size', this._settings.GrowthSettings.FontSize)
-                .attr('font-family', this._settings.GrowthSettings.FontFamily)
-                .attr('text-anchor', 'middle')
-                .attr('dominant-baseline', 'middle')
-                .attr('y', yPos)
-                .attr('x', averageX)
-                .text(growthValueRounded.toString());
+                } else {
+                    // sets primary selector to default value
+                    primGrowth2Index = lastIdx;
+                    primGrowth2Sum = lastSum;
+                    primarySelect2 = lastSelect;
+                }
+
+                let primGrowth1Sum = 0;
+                let primGrowth1Index = -1;
+
+                // finds first growth selector
+                if (primarySelect1) {
+                    // get growth 1 index
+                    primGrowth1Index = this.getIndex(primarySelect1);
+
+                    // get growth 1 sum
+                    primGrowth1Sum = this.getSum(primGrowth1Index);
+
+                } else {
+                    if (hasCapacity) {
+                        // initialize value to first column (capacity)
+                        primarySelect1 = dp.D3Data[0].sharedAxis;
+
+                        // get growth 1 index
+                        primGrowth1Index = this.getIndex(primarySelect1);
+
+                        // get growth 1 sum
+                        primGrowth1Sum = this.getSum(primGrowth1Index);
+
+                    }
+                    // if capacity is 0, use 12-month previous
+                    else {
+                        let months = Interfaces.MonthNames;
+                        // if 12-month prev == 0 find next closest available non-zero month, starting from 12-month prev and incrementing
+                        primGrowth1Index = primGrowth2Index - 12 < 0 ? 0 : primGrowth2Index - 12;
+
+                        // let month = dp.Columns[primGrowth2Index].slice(0,3);
+                        // let year = parseInt(dp.Columns[primGrowth2Index].slice(4));
+
+                        // year--;
+
+                        // for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
+                        //     let col = month + '-' + year.toString();
+                        //     if (dp.Columns[primGrowth1Index] != col || !this.getSum(primGrowth1Index)) {
+
+                        //     }
+                        // }
+                        // console.log(month, year)
+
+                        while (primGrowth1Index < dp.Columns.length) {
+                            // calculates sum for selected month
+                            primGrowth1Sum = this.getSum(primGrowth1Index);
+                            if (primGrowth1Sum)
+                                break;
+
+                            primGrowth1Index++;
+                        }
+                        primarySelect1 = dp.Columns[primGrowth1Index];
+                    }
+                }
+
+                // define height offset of growth indicator
+                let heightOffset = PRIMARY_LINE_SETTINGS.LineOffsetHeight;
+                // get top y pos
+                let yPos = y(y.domain()[1]);
+
+                // draw primary growth indicator
+                try {
+                    // defines coordinate points for label and line
+                    let growth1Y = y(primGrowth1Sum) - heightOffset;
+                    let growth1X = x(primarySelect1) + x.bandwidth() / 2;
+                    let growth2Y = y(primGrowth2Sum) - heightOffset;
+                    let growth2X = x(primarySelect2) + x.bandwidth() / 2;
+
+                    // defines line coordinates
+                    let path = d3.line()([
+                        [growth1X, growth1Y],
+                        [growth1X, yPos],
+                        [growth2X, yPos],
+                        [growth2X, growth2Y]]);
+
+                    // draw line
+                    this.drawLine(path, 'growthLine', PRIMARY_LINE_SETTINGS);
+
+                    // draw first arrow
+                    this.drawTriangle(growth1X, growth1Y, PRIMARY_LINE_SETTINGS, 60);
+
+                    // draw second arrow
+                    this.drawTriangle(growth2X, growth2Y, PRIMARY_LINE_SETTINGS, 60);
+
+                    let averageX = (growth1X + growth2X) / 2;
+
+                    // calculate label text
+                    let growthValue = primGrowth1Index ? primGrowth1Sum / primGrowth2Sum : primGrowth2Sum / primGrowth1Sum;
+                    growthValue = (1 - growthValue) * 100;
+
+                    let growthValueRounded = Math.round(growthValue * 10) / 10 + '%';
+
+                    // draw label background shape
+                    this.drawEllipse(averageX, yPos, growthValueRounded.toString(), PRIMARY_LABEL_SETTINGS);
+
+                    // draw label text
+                    this.drawText(averageX, yPos, PRIMARY_LABEL_SETTINGS, growthValueRounded.toString());
+                }
+                catch (e) {
+                    this.parent.innerHTML = 'Unable to create primary growth labels';
+                }
             }
-            catch(e) { 
-                this.parent.innerHTML = 'Unable to create growth labels';
+
+            // adds secondary growth indicator
+            if (SECONDARY_GROWTH_SETTINGS.ToggleSecondaryIndicator) {
+                // get secondary growth selectors
+                let secondarySelect1 = SECONDARY_GROWTH_SETTINGS.Selector1;
+                let secondarySelect2 = SECONDARY_GROWTH_SETTINGS.Selector2;
+
+                let selectors1 = [];
+                let selectors2 = [];
+
+                // splits secondary selectors using comma as delimiter and removes extra spaces
+                // appends to array
+                // note that empty strings are valid selectors, as long as they are separated by commas
+                secondarySelect1.split(',').forEach(s => selectors1.push(s.trim()));
+                secondarySelect2.split(',').forEach(s => selectors2.push(s.trim()));
+
+                // loops for every selector in first array
+                // could also loop through second array, doesn't matter
+                selectors1.forEach((selector, idx) => {
+                    // first selector
+                    let selector1 = selector;
+
+                    // second selector
+                    let selector2 = selectors2[idx];
+
+                    // initialize sums and indices
+                    let secGrowth2Sum = 0;
+                    let secGrowth2Index = -1;
+
+                    let secGrowth1Sum = 0;
+                    let secGrowth1Index = -1;
+
+                    // gets properties of selectors, if empty, use latest values
+                    secGrowth1Index = selector1 ? this.getIndex(selector1) : this.getIndex(lastSelect) - 1; // index
+                    selector1 = dp.D3Data[secGrowth1Index].sharedAxis; // name
+
+                    secGrowth2Index = selector2 ? this.getIndex(selector2) : this.getIndex(lastSelect); // index
+                    selector2 = dp.D3Data[secGrowth2Index].sharedAxis; // name
+
+                    // gets serie sums
+                    secGrowth1Sum = this.getSum(secGrowth1Index);
+                    secGrowth2Sum = this.getSum(secGrowth2Index);
+
+                    // gets bar values
+                    let maxStackData = stackData[stackData.length - 1];
+                    let data1 = maxStackData[secGrowth1Index][1];
+                    let data2 = maxStackData[secGrowth2Index][1];
+
+                    try {
+                        // initializes coordinate points based on bars selected
+                        let growth1Y = y(secGrowth1Sum);
+                        let growth2Y = y(secGrowth2Sum);
+                        let growth1X = x(selector1);
+                        let growth2X = x(selector2);
+
+                        let averageY = (growth2Y + growth1Y) / 2;
+                        let xPos;
+
+                        if (SECONDARY_LABEL_SETTINGS.DisplaySide == 'right') {
+                            // adds offset to account for bar width
+                            growth1X += x.bandwidth();
+                            growth2X += x.bandwidth();
+
+                            // sets x pos for display side == 'right'
+                            xPos = Math.max(growth2X, growth1X) + SECONDARY_LABEL_SETTINGS.xOffset;
+
+                            // ensures x pos does not exceed chart width
+                            xPos = xPos < trueWidth ? xPos : trueWidth;
+                        } else {
+                            // setting x position of growth label if display side is 'left'
+                            xPos = Math.min(growth2X, growth1X) - SECONDARY_LABEL_SETTINGS.xOffset;
+
+                            // ensures x pos does not exceed chart width
+                            xPos = xPos < 0 ? 0 : xPos;
+                        }
+
+                        // draw line
+                        let path = d3.line()([
+                            [growth1X, growth1Y],
+                            [xPos, growth1Y],
+                            [xPos, growth2Y],
+                            [growth2X, growth2Y]]);
+
+                        this.drawLine(path, 'growthLineValues', SECONDARY_LINE_SETTINGS);
+
+                        // set line type
+                        if (SECONDARY_LINE_SETTINGS.LineType == 'dashed') {
+                            svg.selectAll('.growthLineValues')
+                                .attr('stroke-dasharray', '5,4');
+                        }
+
+                        // calculate label text
+                        let growthValue = (1 - data1 / data2) * 100;
+                        let growthValueRounded = Math.round(growthValue * 10) / 10 + '%';
+
+                        // draw label background shape
+                        this.drawEllipse(xPos, averageY, growthValueRounded.toString(), SECONDARY_LABEL_SETTINGS)
+
+                        // draw label text
+                        this.drawText(xPos, averageY, SECONDARY_LABEL_SETTINGS, growthValueRounded.toString());
+
+                        // draw first arrow
+                        this.drawTriangle(growth1X, growth1Y, SECONDARY_LINE_SETTINGS, 30);
+
+                        // draw second arrow
+                        this.drawTriangle(growth2X, growth2Y, SECONDARY_LINE_SETTINGS, 30);
+
+                    } catch (e) {
+                        this.container.innerHTML = "Unable to create secondary growth labels";
+                    }
+                });
+            }
+        }
+
+        // draw growth indicators for grouped bar chart
+        else if (LAYOUT_SETTINGS.ChartType == 'clustered') {
+            // get serie selectors
+            let primarySelect1 = PRIMARY_GROWTH_SETTINGS.Selector1;
+            let primarySelect2 = PRIMARY_GROWTH_SETTINGS.Selector2;
+
+            // getting indices
+            // if selectors aren't empty, get index, otherwise use default values
+            let pIdx1 = primarySelect1 ? dp.Series.indexOf(primarySelect1) : dp.Series.length - 2;
+            let pIdx2 = primarySelect2 ? dp.Series.indexOf(primarySelect2) : dp.Series.length - 1;
+
+            // reassigns serie selectors based on index
+            primarySelect1 = dp.Series[pIdx1];
+            primarySelect2 = dp.Series[pIdx2];
+
+            let heightOffset = PRIMARY_LINE_SETTINGS.LineOffsetHeight;
+
+            // draw primary growth indicators
+            if (dp.Series.length > 1 &&
+                PRIMARY_GROWTH_SETTINGS.TogglePrimaryIndicators) {
+
+                dp.D3Data.forEach(dataset => {
+                    // gets corresponding serie data based on selectors
+                    let data1 = dataset[primarySelect1];
+                    let data2 = dataset[primarySelect2];
+
+                    // if data is not 0 - no point in rendering indicators for a column of 0s
+                    if (data1 && data2) {
+                        try {
+                            // initializes coordinate points based on bars selected
+                            let growth1Y = y(data1) - heightOffset;
+                            let growth2Y = y(data2) - heightOffset;
+                            let growth1X = x(dataset.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * pIdx1;
+                            let growth2X = x(dataset.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * pIdx2;
+
+                            // sets x position to the center of the bar
+                            growth1X += x.bandwidth() / (dp.Series.length * 2);
+                            growth2X += x.bandwidth() / (dp.Series.length * 2);
+
+                            let averageX = (growth1X + growth2X) / 2;
+
+                            // represents top border of the chart (excluding legend and other labels), defaults to 0
+                            let maxYPos = y(y.domain()[1]);
+
+                            let yPos = maxYPos;
+                            // gets y pos for label
+                            if (!PRIMARY_LINE_SETTINGS.AlignIndicators) {
+                                yPos = Math.min(growth1Y, growth2Y) - PRIMARY_LABEL_SETTINGS.LabelHeight * 2
+
+                                // ensures yPos does not exceed max, though technically max is actually a min
+                                yPos = yPos > maxYPos ? yPos : maxYPos;
+
+                                yPos -= PRIMARY_LABEL_SETTINGS.LabelOffsetHeight;
+                            }
+
+                            // draw line
+                            let path = d3.line()([
+                                [growth1X, growth1Y],
+                                [growth1X, yPos],
+                                [growth2X, yPos],
+                                [growth2X, growth2Y]]);
+
+                            this.drawLine(path, 'growthLine', PRIMARY_LINE_SETTINGS);
+
+                            // calculate label text
+                            let growthValue = (1 - data1 / data2) * 100;
+                            let growthValueRounded = Math.round(growthValue * 10) / 10 + '%';
+
+                            // draw label background shape
+                            this.drawEllipse(averageX, yPos, growthValueRounded.toString(), PRIMARY_LABEL_SETTINGS);
+
+                            // draw label text
+                            this.drawText(averageX, yPos, PRIMARY_LABEL_SETTINGS, growthValueRounded.toString());
+
+                            // draw first arrow
+                            this.drawTriangle(growth1X, growth1Y, PRIMARY_LINE_SETTINGS, 60);
+
+                            // draw second arrow
+                            this.drawTriangle(growth2X, growth2Y, PRIMARY_LINE_SETTINGS, 60);
+
+                        } catch (e) {
+                            this.container.innerHTML = "Unable to create primary growth labels";
+                        }
+                    }
+                });
+            }
+
+            // adds secondary growth indicator
+            if (SECONDARY_GROWTH_SETTINGS.ToggleSecondaryIndicator) {
+                // get serie selectors
+                let secondarySelect1 = SECONDARY_GROWTH_SETTINGS.Selector1;
+                let secondarySelect2 = SECONDARY_GROWTH_SETTINGS.Selector2;
+
+                // get indexes if selectors aren't empty, otherwise use default values
+                let sIdx1 = secondarySelect1 ? dp.Series.indexOf(secondarySelect1) : dp.Series.length - 2;
+                let sIdx2 = secondarySelect2 ? dp.Series.indexOf(secondarySelect2) : dp.Series.length - 1;
+
+                // reassigns serie selectors based on index
+                secondarySelect1 = dp.Series[sIdx1];
+                secondarySelect2 = dp.Series[sIdx2];
+
+                // gets selectors list
+                let selectorsList = SECONDARY_GROWTH_SETTINGS.SelectorsList;
+                let selectors = [];
+                // in case of multiple selectors, splits selectors based on comma and appends to array
+                selectorsList.split(',').forEach(s => selectors.push(s.trim()));
+
+                // draws indicator for each selector
+                selectors.forEach(selector => {
+                    let selIdx;
+
+                    // gets index of selected group
+                    // if selector is empty, defaults to first-from-last non-zero group
+                    if (selector) {
+                        selIdx = this.getIndex(selector); // get index
+                    } else {
+                        // get default value
+                        // loops until a non-zero serie sum is found
+                        for (let idx = dp.D3Data.length - 1; idx >= 0; idx--) {
+                            let serieSum = this.getSum(idx);
+                            selIdx = idx;
+
+                            if (serieSum)
+                                break;
+                        }
+                        // assigns selector to first non-zero column
+                        selector = dp.D3Data[selIdx].sharedAxis;
+                    }
+
+                    // gets data points for both serie selections based on selected indices
+                    let data1 = dp.D3Data[selIdx][secondarySelect1];
+                    let data2 = dp.D3Data[selIdx][secondarySelect2];
+
+                    try {
+                        // initializes coordinate points based on bars selected
+                        let growth1Y = y(data1);
+                        let growth2Y = y(data2);
+
+                        let averageY = (growth2Y + growth1Y) / 2;
+
+                        // calculates starting x positions for line, defaults to right corner of bar
+                        let growth1X = x(selector) + x.bandwidth() / dp.Series.length * sIdx1;
+                        let growth2X = x(selector) + x.bandwidth() / dp.Series.length * sIdx2;
+
+                        // calculates x pos for label
+                        let xPos = Math.min(growth2X, growth1X) - SECONDARY_LABEL_SETTINGS.xOffset;
+                        // ensures x pos does not exceed width
+                        xPos = xPos < 0 ? 0 : xPos;
+
+                        if (SECONDARY_LABEL_SETTINGS.DisplaySide == 'right') {
+                            // adds offset to account for bar width
+                            growth1X += x.bandwidth() / dp.Series.length;
+                            growth2X += x.bandwidth() / dp.Series.length;
+
+                            // gets desired x position
+                            xPos = Math.max(growth2X, growth1X) + SECONDARY_LABEL_SETTINGS.xOffset;
+                            // ensures x pos does not exceed width
+                            xPos = xPos < trueWidth ? xPos : trueWidth;
+                        }
+
+                        // draw line
+                        let path = d3.line()([
+                            [growth1X, growth1Y],
+                            [xPos, growth1Y],
+                            [xPos, growth2Y],
+                            [growth2X, growth2Y]]);
+
+                        this.drawLine(path, 'growthLineValues', SECONDARY_LINE_SETTINGS);
+
+                        // sets line type
+                        if (SECONDARY_LINE_SETTINGS.LineType == 'dashed') {
+                            svg.selectAll('.growthLineValues')
+                                .attr('stroke-dasharray', '5,4');
+                        }
+
+                        // calculate label text
+                        let growthValue = (1 - data1 / data2) * 100;
+                        let growthValueRounded = Math.round(growthValue * 10) / 10 + '%'
+
+                        // draw label background shape
+                        this.drawEllipse(xPos, averageY, growthValueRounded.toString(), SECONDARY_LABEL_SETTINGS);
+
+                        // draw label text
+                        this.drawText(xPos, averageY, SECONDARY_LABEL_SETTINGS, growthValueRounded.toString());
+
+                        // draw first arrow
+                        this.drawTriangle(growth1X, growth1Y, SECONDARY_LINE_SETTINGS, 30);
+
+                        // draw second arrow
+                        this.drawTriangle(growth2X, growth2Y, SECONDARY_LINE_SETTINGS, 30);
+
+                    } catch (e) {
+                        this.container.innerHTML = "Unable to create secondary growth labels";
+                    }
+                });
             }
         }
     }
 
+    // gets range of data
     private getRange(): Interfaces.Range {
+        /* 
+        * Param: none 
+        * Returns: max, min
+        */
         let localMax = 0;
         dp.D3Data.forEach(data => {
             dp.Series.forEach(serie => {
@@ -587,24 +1082,159 @@ export class D3Visual {
             min: 0
         }
     }
+
+    // get index of selector
+    private getIndex(selector: string): number {
+        /* 
+        * Param: selector 
+        * Returns: corresponding column index in data table
+        */
+        let selectedIdx = -1;
+
+        dp.D3Data.forEach((data, idx) => {
+            if (data.sharedAxis == selector)
+                selectedIdx = idx;
+        });
+
+        // sanity check
+        if (selectedIdx == -1) {
+            this.parent.innerHTML = 'Growth Selector not correct';
+            return selectedIdx;
+        }
+
+        return selectedIdx;
+    }
+
+    // gets sum of serie
+    private getSum(idx: number): number {
+        /* 
+        * Param: index 
+        * Returns: sum of corresponding column in data table
+        */
+        let sum = 0;
+        dp.Series.forEach(serie => {
+            sum += dp.D3Data[idx][serie];
+        });
+        return sum;
+    }
+
+    // gets displayed width of text
+    private getTextWidth(text: string, settings: any): number {
+        /* 
+        * Param: selector, settings
+        * Returns: width of text based on font size and family
+        */
+        try {
+            let fontFamily = settings.FontFamily;
+            let fontSize = settings.FontSize;
+
+            let font = fontSize + 'px ' + fontFamily;
+
+            let canvas = document.createElement('canvas');
+            let context = canvas.getContext("2d");
+            context.font = font;
+
+            return context.measureText(text).width;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // draws triangles/arrows on the svg
+    private drawTriangle(x: number, y: number, settings: any, rotation: number) {
+        /* 
+        * Param: x coord, y coord, settings, rotation 
+        * Returns: none
+        */
+        if (settings.ArrowToggle) {
+            this.svg.append('path')
+                .attr('d', d3.symbol().type(d3.symbolTriangle).size(settings.ArrowSize))
+                .attr('fill', settings.LineColor)
+                .attr('transform', `translate(${x}, ${y}) rotate(${rotation})`);
+        }
+    }
+
+    // adds text to svg
+    private drawText(x: number, y: number, settings: any, text: string) {
+        /* 
+        * Param: x coord, y coord, settings, text 
+        * Returns: none
+        */
+        this.svg.append('text')
+            .attr('width', settings.LabelMinWidth)
+            .attr('height', settings.LabelHeight)
+            .attr('fill', settings.FontColor)
+            .attr('font-size', settings.FontSize)
+            .attr('font-family', settings.FontFamily)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .attr('y', y)
+            .attr('x', x)
+            .text(text);
+    }
+
+    // draws label background shape
+    private drawEllipse(cx: number, cy: number, text: string, settings: any) {
+        /* 
+        * Param: x coord, y coord, text, settings 
+        * Returns: none
+        */
+        if (settings.ToggleBgShape) {
+            let textWidth = this.getTextWidth(text, settings);
+            this.svg.append('ellipse')
+                .attr('rx', settings.LabelMinWidth + 10 > textWidth ? settings.LabelMinWidth : textWidth - 10) // resizes label based on text width
+                .attr('ry', settings.LabelHeight)
+                .attr('cx', cx)
+                .attr('cy', cy)
+                .attr('fill', settings.LabelBackgroundColor)
+                .attr('stroke', settings.BorderColor)
+                .attr('stroke-width', settings.BorderSize);
+        }
+    }
+
+    // draws line
+    private drawLine(path: string, classed: string, settings: any) {
+        /* 
+        * Param: path, class name, settings 
+        * Returns: none
+        */
+        this.svg.append('path')
+            .attr('fill', 'none')
+            .attr('stroke', settings.LineColor)
+            .attr('stroke-width', settings.LineSize)
+            .attr('d', path)
+            .classed(classed, true);
+    }
 }
 
-function nFormatter(num, digits): string {
+function nFormatter(num: number, digits: number, displayUnits: string): string {
     // converts 15,000 to 15k and etc
-    var si = [
-        { value: 1, symbol: '' },
-        { value: 1E3, symbol: 'K' },
-        { value: 1E6, symbol: 'M' },
-        { value: 1E9, symbol: 'B' },
-        { value: 1E12, symbol: 'T' },
-        { value: 1E15, symbol: 'P' },
-        { value: 1E18, symbol: 'E' }
+    let si = [
+        { value: 1, symbol: '', text: 'none' },
+        { value: 1E3, symbol: 'K', text: 'thousands' },
+        { value: 1E6, symbol: 'M', text: 'millions' },
+        { value: 1E9, symbol: 'B', text: 'billions' },
+        { value: 1E12, symbol: 'T', text: 'trillions' },
+        { value: 1E15, symbol: 'P', text: 'quadrillions' },
+        { value: 1E18, symbol: 'E', text: 'quintillions' }
     ];
-    var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-    var i;
-    for (i = si.length - 1; i > 0; i--) {
-        if (num >= si[i].value) {
-            break;
+
+    // regex to remove insignficant digits after decimal place
+    let rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+
+    let i;
+    // converts numbers into largest reasonable units unless otherwise specified
+    if (displayUnits == 'auto') {
+        for (i = si.length - 1; i > 0; i--) {
+            if (num >= si[i].value) {
+                break;
+            }
+        }
+    } else {
+        for (i = 0; i < si.length - 1; i++) {
+            if (displayUnits == si[i].text) {
+                break;
+            }
         }
     }
     return (num / si[i].value).toFixed(digits).replace(rx, '$1') + si[i].symbol;

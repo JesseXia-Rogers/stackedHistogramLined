@@ -1,4 +1,4 @@
-# Multipurpose Custom PBI Column Chart
+# Custom PBI Column Chart
 aka stackedHistogramLined
 
 A multi-purpose chart designed to display historical KPI data presented in monthly report. 

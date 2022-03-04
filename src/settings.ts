@@ -30,7 +30,10 @@ import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
 export class VisualSettings extends DataViewObjectsParser {
-    public AxisLabelSettings: AxisLabelSettings = new AxisLabelSettings();
+    // public AxisSettings: AxisSettings = new AxisSettings();
+    // public AxisLabelSettings: AxisLabelSettings = new AxisLabelSettings();
+    public XAxisSettings: XAxisSettings = new XAxisSettings();
+    public YAxisSettings: YAxisSettings = new YAxisSettings();
     public DataLabelSettings: DataLabelSettings = new DataLabelSettings();
     public ThresholdSettings: ThresholdSettings = new ThresholdSettings();
     public PrimaryGrowthSettings: PrimaryGrowthSettings = new PrimaryGrowthSettings();
@@ -42,6 +45,7 @@ export class VisualSettings extends DataViewObjectsParser {
     public PrimaryLineSettings: PrimaryLineSettings = new PrimaryLineSettings();
     public SecondaryLabelSettings: SecondaryLabelSettings = new SecondaryLabelSettings();
     public SecondaryLineSettings: SecondaryLineSettings = new SecondaryLineSettings();
+    public SecondaryYAxis: SecondaryYAxis = new SecondaryYAxis();
 }
 
 // initializes default values for all settings
@@ -49,34 +53,50 @@ export class VisualSettings extends DataViewObjectsParser {
 export class LayoutSettings {
     public ChartType: string = 'stacked';
 
-    public YMaxValue: number = 0;
-    public YAxisCount: number = 3;
+    public ChartXMargin: number = 85;
+    public ChartYMargin: number = 70;
 
     public XAxisBarWhiteSpace: number = 0.3;
+}
+
+export class XAxisSettings {
+    public CapacityToggle: boolean = true;
+
+    public FontFamily: string = 'Calibri';
+    public FontColor: string = '#000000';
+    public FontSize: number = 11;
+
+    public AxisLabelAngle: number = 0;
+    public CapacityLabelAngle: number = 0;
+}
+
+export class YAxisSettings {
+    public DisplayUnits: string = 'auto';
+
+    public YMaxValue: number = 0;
+    public TickCount: number = 3;
 
     public ToggleGridLines: boolean = true;
 
-    public CapacityToggle: boolean = true;
+    public FontFamily: string = 'Calibri';
+    public FontColor: string = '#000000';
+    public FontSize: number = 11;
+
 }
 
-export class AxisLabelSettings {
+export class SecondaryYAxis {
+    public ToggleOn: boolean = false;
+
+    public MinValue: number = 0;
+    public MaxValue: number = 500;
+
     public DisplayUnits: string = 'auto';
 
-    public YAxisText: string = 'Value';
-    public XAxisText: string = 'Period';
-
-    public YAxisLabelToggle: boolean = false;
-    public XAxisLabelToggle: boolean = false;
-
+    public TickCount: number = 3;
+    
     public FontFamily: string = 'Calibri';
-
-    public AxisFontColor: string = '#000000';
-    public AxisFontSize: number = 13;
-
-    public AxisValueColor: string = '#000000';
-    public AxisValueFontSize: number = 11;
-
-    public AxisLabelAngle: number = 0;
+    public FontColor: string = '#000000';
+    public FontSize: number = 11;
 }
 
 export class DataColors {
@@ -102,6 +122,8 @@ export class DataLabelSettings {
 
 export class LegendSettings {
     public LegendPosition: string = 'top';
+
+    public LegendMargin: number = 0;
 
     public FontColor: string = '#000000';
     public FontFamily: string = 'Calibri';

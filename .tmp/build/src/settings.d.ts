@@ -1,7 +1,8 @@
 import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 export declare class VisualSettings extends DataViewObjectsParser {
-    AxisLabelSettings: AxisLabelSettings;
+    XAxisSettings: XAxisSettings;
+    YAxisSettings: YAxisSettings;
     DataLabelSettings: DataLabelSettings;
     ThresholdSettings: ThresholdSettings;
     PrimaryGrowthSettings: PrimaryGrowthSettings;
@@ -13,27 +14,40 @@ export declare class VisualSettings extends DataViewObjectsParser {
     PrimaryLineSettings: PrimaryLineSettings;
     SecondaryLabelSettings: SecondaryLabelSettings;
     SecondaryLineSettings: SecondaryLineSettings;
+    SecondaryYAxis: SecondaryYAxis;
 }
 export declare class LayoutSettings {
     ChartType: string;
-    YMaxValue: number;
-    YAxisCount: number;
+    ChartXMargin: number;
+    ChartYMargin: number;
     XAxisBarWhiteSpace: number;
-    ToggleGridLines: boolean;
-    CapacityToggle: boolean;
 }
-export declare class AxisLabelSettings {
-    DisplayUnits: string;
-    YAxisText: string;
-    XAxisText: string;
-    YAxisLabelToggle: boolean;
-    XAxisLabelToggle: boolean;
+export declare class XAxisSettings {
+    CapacityToggle: boolean;
     FontFamily: string;
-    AxisFontColor: string;
-    AxisFontSize: number;
-    AxisValueColor: string;
-    AxisValueFontSize: number;
+    FontColor: string;
+    FontSize: number;
     AxisLabelAngle: number;
+    CapacityLabelAngle: number;
+}
+export declare class YAxisSettings {
+    DisplayUnits: string;
+    YMaxValue: number;
+    TickCount: number;
+    ToggleGridLines: boolean;
+    FontFamily: string;
+    FontColor: string;
+    FontSize: number;
+}
+export declare class SecondaryYAxis {
+    ToggleOn: boolean;
+    MinValue: number;
+    MaxValue: number;
+    DisplayUnits: string;
+    TickCount: number;
+    FontFamily: string;
+    FontColor: string;
+    FontSize: number;
 }
 export declare class DataColors {
     seriesFontColor: string;
@@ -53,6 +67,7 @@ export declare class DataLabelSettings {
 }
 export declare class LegendSettings {
     LegendPosition: string;
+    LegendMargin: number;
     FontColor: string;
     FontFamily: string;
     FontSize: number;

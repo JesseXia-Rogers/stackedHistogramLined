@@ -6,7 +6,7 @@ import * as Interfaces from './interfaces';
 
 import * as d3 from 'd3';
 import powerbi from 'powerbi-visuals-api';
-import { VisualSettings } from './settings';
+import { LayoutSettings, VisualSettings } from './settings';
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import { group, local, stack } from 'd3';
 
@@ -60,7 +60,9 @@ export class D3Visual {
     public CreateVisualContainer() {
         // gets settings
         const LAYOUT_SETTINGS = this._settings.LayoutSettings;
-        const AXIS_LABEL_SETTINGS = this._settings.AxisLabelSettings;
+        // const AXIS_LABEL_SETTINGS = this._settings.AxisLabelSettings;
+        const X_AXIS_SETTINGS = this._settings.XAxisSettings;
+        const Y_AXIS_SETTINGS = this._settings.YAxisSettings;
         const DATA_LABEL_SETTINGS = this._settings.DataLabelSettings;
         const LEGEND_SETTINGS = this._settings.LegendSettings;
         const THRESHOLD_SETTINGS = this._settings.ThresholdSettings;
@@ -70,6 +72,7 @@ export class D3Visual {
         const SECONDARY_GROWTH_SETTINGS = this._settings.SecondaryGrowthSettings;
         const SECONDARY_LABEL_SETTINGS = this._settings.SecondaryLabelSettings;
         const SECONDARY_LINE_SETTINGS = this._settings.SecondaryLineSettings;
+        const SECONDARY_Y_AXIS = this._settings.SecondaryYAxis;
 
         // create visual container
         this.container = document.createElement('div');
@@ -104,15 +107,15 @@ export class D3Visual {
         this.svg = svg;
 
         // get and set svg attr
-        let xPadding = 85;
-        let yPadding = 70;
+        let xPadding = LAYOUT_SETTINGS.ChartXMargin;
+        let yPadding = LAYOUT_SETTINGS.ChartYMargin;
+
         let width = svgSelector.offsetWidth - xPadding;
         let height = svgSelector.offsetHeight - yPadding;
         let marginTop = 40;
 
-        let legendMargin = 70;
         if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
-            height = this.dimension.height - legendMargin;
+            height = this.dimension.height - yPadding;
             marginTop = 20;
         }
 
@@ -124,7 +127,7 @@ export class D3Visual {
         // removes capacity if 0 or toggled off
         // capacity is assumed to always be the first column
         let hasCapacity = true;
-        if (!LAYOUT_SETTINGS.CapacityToggle || !this.getSum(0)) {
+        if (!X_AXIS_SETTINGS.CapacityToggle || !this.getSum(0)) {
             hasCapacity = false;
             dp.D3Data.shift();
         }
@@ -147,24 +150,24 @@ export class D3Visual {
             g.selectAll('.domain').remove();
             g.selectAll('line').remove();
             g.selectAll('text')
-                .attr('transform', `rotate(-${AXIS_LABEL_SETTINGS.AxisLabelAngle})`)
-                .style('text-anchor', AXIS_LABEL_SETTINGS.AxisLabelAngle ? 'end' : 'middle')
-                .style('fill', AXIS_LABEL_SETTINGS.AxisValueColor)
-                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
-                .style('font-size', AXIS_LABEL_SETTINGS.AxisValueFontSize);
+                .attr('transform', `rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
+                .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle')
+                .style('fill', X_AXIS_SETTINGS.FontColor)
+                .style('font-family', X_AXIS_SETTINGS.FontFamily)
+                .style('font-size', X_AXIS_SETTINGS.FontSize);
         }
 
         // set y axis value
-        let y = d3.scaleLinear()
+        let y0 = d3.scaleLinear()
             .domain([0, 500])
             .range([height, 0]);
 
         // set y axis
-        let yAxis = d3.axisLeft(y)
+        let yAxis = d3.axisLeft(y0)
             .tickSize(-width)
             .tickFormat(data => {
                 // formats y-axis labels with appropriate units
-                return nFormatter(parseInt(data.toString()), 3, AXIS_LABEL_SETTINGS.DisplayUnits);
+                return nFormatter(parseInt(data.toString()), 3, Y_AXIS_SETTINGS.DisplayUnits);
             });
 
         // set y axis g
@@ -177,11 +180,28 @@ export class D3Visual {
             d3.selectAll('line')
                 .attr('stroke-dasharray', '1,3')
                 .attr('stroke', 'grey')
-                .attr('stroke-width', +LAYOUT_SETTINGS.ToggleGridLines)
-                .style('fill', AXIS_LABEL_SETTINGS.AxisValueColor)
-                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
-                .style('font-size', AXIS_LABEL_SETTINGS.AxisValueFontSize);
+                .attr('stroke-width', +Y_AXIS_SETTINGS.ToggleGridLines)
+                .style('fill', Y_AXIS_SETTINGS.FontColor)
+                .style('font-family', Y_AXIS_SETTINGS.FontFamily)
+                .style('font-size', Y_AXIS_SETTINGS.FontSize);
         }
+
+        let minVal = SECONDARY_Y_AXIS.MinValue;
+        let maxVal = SECONDARY_Y_AXIS.MaxValue;
+
+        let y1 = d3.scaleLinear()
+            .domain([minVal, maxVal])
+            .range([height, 0]);
+
+
+        let secondaryYAxis = d3.axisRight(y1)
+            .tickFormat(data => {
+                return nFormatter(parseInt(data.toString()), 3, SECONDARY_Y_AXIS.DisplayUnits);
+            });
+
+        let secondaryYAxisG = svg.append('g')
+            .classed('y-axis-g', true)
+            .attr('transform', `translate(${width}, 0)`);
 
         // render x axis
         xAxisG.attr('transform', `translate(0, ${height})`)
@@ -189,43 +209,27 @@ export class D3Visual {
             .call(setXAxisGAttr);
 
         // render y axis
-        yAxisG.call(yAxis.ticks(LAYOUT_SETTINGS.YAxisCount))
+        yAxisG.call(yAxis.ticks(Y_AXIS_SETTINGS.TickCount))
             .call(setYAxisGAttr);
         d3.select('line')
             .filter((d, i) => i == 0)
             .remove();
-
-        // x axis label
-        if (AXIS_LABEL_SETTINGS.XAxisLabelToggle) {
-            svg.append('text')
-                .attr('x', width / 2)
-                .attr('y', height + 40)
-                .style('fill', AXIS_LABEL_SETTINGS.AxisFontColor)
-                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
-                .style('font-size', AXIS_LABEL_SETTINGS.AxisFontSize)
-                .text(AXIS_LABEL_SETTINGS.XAxisText);
-        }
-
-        // y axis label
-        if (AXIS_LABEL_SETTINGS.YAxisLabelToggle) {
-            svg.append('text')
-                .attr('x', 0)
-                .attr('y', height / 2)
-                .attr('transform', 'rotate(-90)')
-                .style('fill', AXIS_LABEL_SETTINGS.AxisFontColor)
-                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
-                .style('font-size', AXIS_LABEL_SETTINGS.AxisFontSize)
-                .text(AXIS_LABEL_SETTINGS.YAxisText);
+        // d3.select('line')
+        //     .filter(function (d, i) {console.log(d, i); return i == 0})
+        //     .remove();
+        if (SECONDARY_Y_AXIS.ToggleOn) {
+            secondaryYAxisG.call(secondaryYAxis.ticks(SECONDARY_Y_AXIS.TickCount))
+                .call(setYAxisGAttr);
         }
 
         // hide origin label
         // values are mostly hard-coded in, not sure if there's a better way
         svg.append('rect')
-            .attr('width', AXIS_LABEL_SETTINGS.AxisValueFontSize)
-            .attr('height', AXIS_LABEL_SETTINGS.AxisValueFontSize)
+            .attr('width', Y_AXIS_SETTINGS.FontSize)
+            .attr('height', Y_AXIS_SETTINGS.FontSize)
             .attr('fill', '#ffffff')
             .attr('y', height - 6)
-            .attr('x', -AXIS_LABEL_SETTINGS.AxisValueFontSize);
+            .attr('x', -Y_AXIS_SETTINGS.FontSize);
 
         // generate stack
         let serieStack = d3.stack().keys(dp.Series);
@@ -323,9 +327,10 @@ export class D3Visual {
             .text(d => d.key);
 
         // places legend at bottom of chart
+        let legendMargin = LEGEND_SETTINGS.LegendMargin;
         if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
-            legendColor.attr('y', legendSelector.offsetHeight - 10);
-            legendText.attr('y', legendSelector.offsetHeight);
+            legendColor.attr('y', legendSelector.offsetHeight - legendMargin - 10);
+            legendText.attr('y', legendSelector.offsetHeight - legendMargin);
         }
 
         // hover info text
@@ -384,58 +389,65 @@ export class D3Visual {
                 }
             }
 
-            let yMax = LAYOUT_SETTINGS.YMaxValue;
+            let yMax = Y_AXIS_SETTINGS.YMaxValue;
 
+            // draws bars & bar labels for clustered chart
             if (LAYOUT_SETTINGS.ChartType == 'clustered') {
                 // find local max
                 let localRange = this.getRange().max;
 
-                // transition y axis
-                y.domain([0, yMax ? yMax : localRange]);
+                // set primary y axis min/max values
+                y0.domain([0, yMax ? yMax : localRange]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
 
-                // set bar positions + height
+                // set bar positions & height
                 bar.data(serie)
+                    // x pos is based off x-axis value + width of bars before
                     .attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx)
                     .attr('width', x.bandwidth() / dp.Series.length)
-                    .attr('y', data => y(data[1] - data[0]))
-                    .attr('height', data => y(data[0]) - y(data[1]));
+                    // y attr sets starting position from which bar rendered
+                    .attr('y', data => y0(data[1] - data[0]))
+                    // height sets height of rectangle rendered from starting y pos
+                    .attr('height', data => y0(data[0]) - y0(data[1]));
 
-                // show text if bar height allows
+                // show text if bar height allows and bar labels are toggled on
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
                     barLabel.text(data => {
-                        let val = data.data[dp.Series[idx]];
-                        let barHeight = y(data[0]) - y(data[1]);
+                        let val = data.data[dp.Series[idx]]; // gets data value
+                        let barHeight = y0(data[0]) - y0(data[1]); // gets bar height
 
                         return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
                     });
 
-                    barLabel.attr('opacity', '1')
-                        .attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx + x.bandwidth() / dp.Series.length / 2)
-                        .attr('y', data => height - (y(data[0]) - y(data[1])) / 2);
+                    // sets x pos of label based on x-axis value + widths of bars before + 1/2 current bar width
+                    barLabel.attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx + x.bandwidth() / dp.Series.length / 2)
+                        .attr('y', data => height - (y0(data[0]) - y0(data[1])) / 2);
                 }
             }
+            // draws bars and bar labels for stacked chart
             else {
-                y.domain([0, yMax ? yMax : Math.max(Math.ceil(dp.DataNumeric.max * 1.2))]);
+                // sets max/min for primary y axis
+                y0.domain([0, yMax ? yMax : Math.ceil(dp.DataNumeric.max * 1.2)]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
 
                 // set bar heights
                 bar.data(serie)
-                    .attr('y', data => y(data[1]))
-                    .attr('height', data => y(data[0]) - y(data[1]));
+                    .attr('y', data => y0(data[1]))
+                    .attr('height', data => y0(data[0]) - y0(data[1]));
 
                 // show text if bar height allows
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
                     barLabel.text(data => {
+                        let barHeight = y0(data[0]) - y0(data[1]);
                         let val = data.data[dp.Series[idx]];
-                        let barHeight = y(data[0]) - y(data[1]);
 
                         return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
                     });
 
-                    barLabel.attr('y', data => y(data[0]) - (y(data[0]) - y(data[1])) / 2);
+                    // bar label y pos based on upper data value - 1/2 height of bar
+                    barLabel.attr('y', data => y0(data[0]) - (y0(data[0]) - y0(data[1])) / 2);
                 }
             }
 
@@ -545,9 +557,9 @@ export class D3Visual {
                 .attr('stroke', THRESHOLD_SETTINGS.LineColor)
                 .attr('stroke-width', THRESHOLD_SETTINGS.LineThickness)
                 .attr('x1', 0)
-                .attr('y1', y(thresholdValue))
+                .attr('y1', y1(thresholdValue))
                 .attr('x2', width)
-                .attr('y2', y(thresholdValue));
+                .attr('y2', y1(thresholdValue));
 
             // sets line type
             if (THRESHOLD_SETTINGS.LineType == 'dashed') {
@@ -580,7 +592,7 @@ export class D3Visual {
                             .attr('width', sumBgWidth)
                             .attr('height', 20)
                             .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
-                            .attr('y', y(maxVal) - 20)
+                            .attr('y', y0(maxVal) - 20)
                             .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
 
                         // text
@@ -592,7 +604,7 @@ export class D3Visual {
                             .attr('font-family', DATA_LABEL_SETTINGS.FontFamily)
                             .attr('text-anchor', 'middle')
                             .attr('dominant-baseline', 'middle')
-                            .attr('y', y(maxVal) - 10)
+                            .attr('y', y0(maxVal) - 10)
                             .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2)
                             .text(text);
                     }
@@ -673,18 +685,18 @@ export class D3Visual {
                         // if 12-month prev == 0 find next closest available non-zero month, starting from 12-month prev and incrementing
                         primGrowth1Index = primGrowth2Index - 12 < 0 ? 0 : primGrowth2Index - 12;
 
-                        // let month = dp.Columns[primGrowth2Index].slice(0,3);
-                        // let year = parseInt(dp.Columns[primGrowth2Index].slice(4));
+                        let month = dp.Columns[primGrowth2Index].slice(0, 3);
+                        let year = parseInt(dp.Columns[primGrowth2Index].slice(4));
 
-                        // year--;
+                        year--;
 
-                        // for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
-                        //     let col = month + '-' + year.toString();
-                        //     if (dp.Columns[primGrowth1Index] != col || !this.getSum(primGrowth1Index)) {
-
-                        //     }
-                        // }
-                        // console.log(month, year)
+                        for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
+                            let col = month + '-' + year.toString();
+                            if (dp.Columns[primGrowth1Index] != col || !this.getSum(primGrowth1Index)) {
+                                primGrowth1Index++;
+                                // console.log(dp.Columns[primGrowth1Index])
+                            }
+                        }
 
                         while (primGrowth1Index < dp.Columns.length) {
                             // calculates sum for selected month
@@ -701,14 +713,14 @@ export class D3Visual {
                 // define height offset of growth indicator
                 let heightOffset = PRIMARY_LINE_SETTINGS.LineOffsetHeight;
                 // get top y pos
-                let yPos = y(y.domain()[1]);
+                let yPos = y0(y0.domain()[1]);
 
                 // draw primary growth indicator
                 try {
                     // defines coordinate points for label and line
-                    let growth1Y = y(primGrowth1Sum) - heightOffset;
+                    let growth1Y = y0(primGrowth1Sum) - heightOffset;
                     let growth1X = x(primarySelect1) + x.bandwidth() / 2;
-                    let growth2Y = y(primGrowth2Sum) - heightOffset;
+                    let growth2Y = y0(primGrowth2Sum) - heightOffset;
                     let growth2X = x(primarySelect2) + x.bandwidth() / 2;
 
                     // defines line coordinates
@@ -795,8 +807,8 @@ export class D3Visual {
 
                     try {
                         // initializes coordinate points based on bars selected
-                        let growth1Y = y(secGrowth1Sum);
-                        let growth2Y = y(secGrowth2Sum);
+                        let growth1Y = y0(secGrowth1Sum);
+                        let growth2Y = y0(secGrowth2Sum);
                         let growth1X = x(selector1);
                         let growth2X = x(selector2);
 
@@ -889,8 +901,8 @@ export class D3Visual {
                     if (data1 && data2) {
                         try {
                             // initializes coordinate points based on bars selected
-                            let growth1Y = y(data1) - heightOffset;
-                            let growth2Y = y(data2) - heightOffset;
+                            let growth1Y = y0(data1) - heightOffset;
+                            let growth2Y = y0(data2) - heightOffset;
                             let growth1X = x(dataset.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * pIdx1;
                             let growth2X = x(dataset.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * pIdx2;
 
@@ -901,7 +913,7 @@ export class D3Visual {
                             let averageX = (growth1X + growth2X) / 2;
 
                             // represents top border of the chart (excluding legend and other labels), defaults to 0
-                            let maxYPos = y(y.domain()[1]);
+                            let maxYPos = y0(y0.domain()[1]);
 
                             let yPos = maxYPos;
                             // gets y pos for label
@@ -994,8 +1006,8 @@ export class D3Visual {
 
                     try {
                         // initializes coordinate points based on bars selected
-                        let growth1Y = y(data1);
-                        let growth2Y = y(data2);
+                        let growth1Y = y0(data1);
+                        let growth2Y = y0(data2);
 
                         let averageY = (growth2Y + growth1Y) / 2;
 

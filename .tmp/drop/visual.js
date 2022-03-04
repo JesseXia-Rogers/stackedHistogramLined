@@ -45,7 +45,9 @@ class D3Visual {
     CreateVisualContainer() {
         // gets settings
         const LAYOUT_SETTINGS = this._settings.LayoutSettings;
-        const AXIS_LABEL_SETTINGS = this._settings.AxisLabelSettings;
+        // const AXIS_LABEL_SETTINGS = this._settings.AxisLabelSettings;
+        const X_AXIS_SETTINGS = this._settings.XAxisSettings;
+        const Y_AXIS_SETTINGS = this._settings.YAxisSettings;
         const DATA_LABEL_SETTINGS = this._settings.DataLabelSettings;
         const LEGEND_SETTINGS = this._settings.LegendSettings;
         const THRESHOLD_SETTINGS = this._settings.ThresholdSettings;
@@ -55,6 +57,7 @@ class D3Visual {
         const SECONDARY_GROWTH_SETTINGS = this._settings.SecondaryGrowthSettings;
         const SECONDARY_LABEL_SETTINGS = this._settings.SecondaryLabelSettings;
         const SECONDARY_LINE_SETTINGS = this._settings.SecondaryLineSettings;
+        const SECONDARY_Y_AXIS = this._settings.SecondaryYAxis;
         // create visual container
         this.container = document.createElement('div');
         this.container.setAttribute('class', 'visual-container');
@@ -82,14 +85,13 @@ class D3Visual {
             .classed('visual-svg', true);
         this.svg = svg;
         // get and set svg attr
-        let xPadding = 85;
-        let yPadding = 70;
+        let xPadding = LAYOUT_SETTINGS.ChartXMargin;
+        let yPadding = LAYOUT_SETTINGS.ChartYMargin;
         let width = svgSelector.offsetWidth - xPadding;
         let height = svgSelector.offsetHeight - yPadding;
         let marginTop = 40;
-        let legendMargin = 70;
         if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
-            height = this.dimension.height - legendMargin;
+            height = this.dimension.height - yPadding;
             marginTop = 20;
         }
         svg.attr('width', width)
@@ -99,7 +101,7 @@ class D3Visual {
         // removes capacity if 0 or toggled off
         // capacity is assumed to always be the first column
         let hasCapacity = true;
-        if (!LAYOUT_SETTINGS.CapacityToggle || !this.getSum(0)) {
+        if (!X_AXIS_SETTINGS.CapacityToggle || !this.getSum(0)) {
             hasCapacity = false;
             _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .D3Data.shift */ .$m.shift();
         }
@@ -118,22 +120,22 @@ class D3Visual {
             g.selectAll('.domain').remove();
             g.selectAll('line').remove();
             g.selectAll('text')
-                .attr('transform', `rotate(-${AXIS_LABEL_SETTINGS.AxisLabelAngle})`)
-                .style('text-anchor', AXIS_LABEL_SETTINGS.AxisLabelAngle ? 'end' : 'middle')
-                .style('fill', AXIS_LABEL_SETTINGS.AxisValueColor)
-                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
-                .style('font-size', AXIS_LABEL_SETTINGS.AxisValueFontSize);
+                .attr('transform', `rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
+                .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle')
+                .style('fill', X_AXIS_SETTINGS.FontColor)
+                .style('font-family', X_AXIS_SETTINGS.FontFamily)
+                .style('font-size', X_AXIS_SETTINGS.FontSize);
         };
         // set y axis value
-        let y = d3__WEBPACK_IMPORTED_MODULE_0__/* .scaleLinear */ .BYU()
+        let y0 = d3__WEBPACK_IMPORTED_MODULE_0__/* .scaleLinear */ .BYU()
             .domain([0, 500])
             .range([height, 0]);
         // set y axis
-        let yAxis = d3__WEBPACK_IMPORTED_MODULE_0__/* .axisLeft */ .y4O(y)
+        let yAxis = d3__WEBPACK_IMPORTED_MODULE_0__/* .axisLeft */ .y4O(y0)
             .tickSize(-width)
             .tickFormat(data => {
             // formats y-axis labels with appropriate units
-            return nFormatter(parseInt(data.toString()), 3, AXIS_LABEL_SETTINGS.DisplayUnits);
+            return nFormatter(parseInt(data.toString()), 3, Y_AXIS_SETTINGS.DisplayUnits);
         });
         // set y axis g
         let yAxisG = svg.append('g')
@@ -144,50 +146,48 @@ class D3Visual {
             d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('line')
                 .attr('stroke-dasharray', '1,3')
                 .attr('stroke', 'grey')
-                .attr('stroke-width', +LAYOUT_SETTINGS.ToggleGridLines)
-                .style('fill', AXIS_LABEL_SETTINGS.AxisValueColor)
-                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
-                .style('font-size', AXIS_LABEL_SETTINGS.AxisValueFontSize);
+                .attr('stroke-width', +Y_AXIS_SETTINGS.ToggleGridLines)
+                .style('fill', Y_AXIS_SETTINGS.FontColor)
+                .style('font-family', Y_AXIS_SETTINGS.FontFamily)
+                .style('font-size', Y_AXIS_SETTINGS.FontSize);
         };
+        let minVal = SECONDARY_Y_AXIS.MinValue;
+        let maxVal = SECONDARY_Y_AXIS.MaxValue;
+        let y1 = d3__WEBPACK_IMPORTED_MODULE_0__/* .scaleLinear */ .BYU()
+            .domain([minVal, maxVal])
+            .range([height, 0]);
+        let secondaryYAxis = d3__WEBPACK_IMPORTED_MODULE_0__/* .axisRight */ .Khx(y1)
+            .tickFormat(data => {
+            return nFormatter(parseInt(data.toString()), 3, SECONDARY_Y_AXIS.DisplayUnits);
+        });
+        let secondaryYAxisG = svg.append('g')
+            .classed('y-axis-g', true)
+            .attr('transform', `translate(${width}, 0)`);
         // render x axis
         xAxisG.attr('transform', `translate(0, ${height})`)
             .call(xAxis)
             .call(setXAxisGAttr);
         // render y axis
-        yAxisG.call(yAxis.ticks(LAYOUT_SETTINGS.YAxisCount))
+        yAxisG.call(yAxis.ticks(Y_AXIS_SETTINGS.TickCount))
             .call(setYAxisGAttr);
         d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys('line')
             .filter((d, i) => i == 0)
             .remove();
-        // x axis label
-        if (AXIS_LABEL_SETTINGS.XAxisLabelToggle) {
-            svg.append('text')
-                .attr('x', width / 2)
-                .attr('y', height + 40)
-                .style('fill', AXIS_LABEL_SETTINGS.AxisFontColor)
-                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
-                .style('font-size', AXIS_LABEL_SETTINGS.AxisFontSize)
-                .text(AXIS_LABEL_SETTINGS.XAxisText);
-        }
-        // y axis label
-        if (AXIS_LABEL_SETTINGS.YAxisLabelToggle) {
-            svg.append('text')
-                .attr('x', 0)
-                .attr('y', height / 2)
-                .attr('transform', 'rotate(-90)')
-                .style('fill', AXIS_LABEL_SETTINGS.AxisFontColor)
-                .style('font-family', AXIS_LABEL_SETTINGS.FontFamily)
-                .style('font-size', AXIS_LABEL_SETTINGS.AxisFontSize)
-                .text(AXIS_LABEL_SETTINGS.YAxisText);
+        // d3.select('line')
+        //     .filter(function (d, i) {console.log(d, i); return i == 0})
+        //     .remove();
+        if (SECONDARY_Y_AXIS.ToggleOn) {
+            secondaryYAxisG.call(secondaryYAxis.ticks(SECONDARY_Y_AXIS.TickCount))
+                .call(setYAxisGAttr);
         }
         // hide origin label
         // values are mostly hard-coded in, not sure if there's a better way
         svg.append('rect')
-            .attr('width', AXIS_LABEL_SETTINGS.AxisValueFontSize)
-            .attr('height', AXIS_LABEL_SETTINGS.AxisValueFontSize)
+            .attr('width', Y_AXIS_SETTINGS.FontSize)
+            .attr('height', Y_AXIS_SETTINGS.FontSize)
             .attr('fill', '#ffffff')
             .attr('y', height - 6)
-            .attr('x', -AXIS_LABEL_SETTINGS.AxisValueFontSize);
+            .attr('x', -Y_AXIS_SETTINGS.FontSize);
         // generate stack
         let serieStack = d3__WEBPACK_IMPORTED_MODULE_0__/* .stack */ .knu().keys(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series */ .FH);
         let stackData = serieStack(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .D3Data */ .$m);
@@ -267,9 +267,10 @@ class D3Visual {
             .style('font-size', LEGEND_SETTINGS.FontSize)
             .text(d => d.key);
         // places legend at bottom of chart
+        let legendMargin = LEGEND_SETTINGS.LegendMargin;
         if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
-            legendColor.attr('y', legendSelector.offsetHeight - 10);
-            legendText.attr('y', legendSelector.offsetHeight);
+            legendColor.attr('y', legendSelector.offsetHeight - legendMargin - 10);
+            legendText.attr('y', legendSelector.offsetHeight - legendMargin);
         }
         // hover info text
         let hoverInfoDiv = d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys('body')
@@ -322,48 +323,55 @@ class D3Visual {
                     barLabel.attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / 2);
                 }
             }
-            let yMax = LAYOUT_SETTINGS.YMaxValue;
+            let yMax = Y_AXIS_SETTINGS.YMaxValue;
+            // draws bars & bar labels for clustered chart
             if (LAYOUT_SETTINGS.ChartType == 'clustered') {
                 // find local max
                 let localRange = this.getRange().max;
-                // transition y axis
-                y.domain([0, yMax ? yMax : localRange]);
+                // set primary y axis min/max values
+                y0.domain([0, yMax ? yMax : localRange]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
-                // set bar positions + height
+                // set bar positions & height
                 bar.data(serie)
+                    // x pos is based off x-axis value + width of bars before
                     .attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length * idx)
                     .attr('width', x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length)
-                    .attr('y', data => y(data[1] - data[0]))
-                    .attr('height', data => y(data[0]) - y(data[1]));
-                // show text if bar height allows
+                    // y attr sets starting position from which bar rendered
+                    .attr('y', data => y0(data[1] - data[0]))
+                    // height sets height of rectangle rendered from starting y pos
+                    .attr('height', data => y0(data[0]) - y0(data[1]));
+                // show text if bar height allows and bar labels are toggled on
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
                     barLabel.text(data => {
-                        let val = data.data[_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series */ .FH[idx]];
-                        let barHeight = y(data[0]) - y(data[1]);
+                        let val = data.data[_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series */ .FH[idx]]; // gets data value
+                        let barHeight = y0(data[0]) - y0(data[1]); // gets bar height
                         return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
                     });
-                    barLabel.attr('opacity', '1')
-                        .attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length * idx + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length / 2)
-                        .attr('y', data => height - (y(data[0]) - y(data[1])) / 2);
+                    // sets x pos of label based on x-axis value + widths of bars before + 1/2 current bar width
+                    barLabel.attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length * idx + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length / 2)
+                        .attr('y', data => height - (y0(data[0]) - y0(data[1])) / 2);
                 }
             }
+            // draws bars and bar labels for stacked chart
             else {
-                y.domain([0, yMax ? yMax : Math.max(Math.ceil(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .DataNumeric.max */ .l6.max * 1.2))]);
+                // sets max/min for primary y axis
+                y0.domain([0, yMax ? yMax : Math.ceil(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .DataNumeric.max */ .l6.max * 1.2)]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
                 // set bar heights
                 bar.data(serie)
-                    .attr('y', data => y(data[1]))
-                    .attr('height', data => y(data[0]) - y(data[1]));
+                    .attr('y', data => y0(data[1]))
+                    .attr('height', data => y0(data[0]) - y0(data[1]));
                 // show text if bar height allows
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
                     barLabel.text(data => {
+                        let barHeight = y0(data[0]) - y0(data[1]);
                         let val = data.data[_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series */ .FH[idx]];
-                        let barHeight = y(data[0]) - y(data[1]);
                         return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
                     });
-                    barLabel.attr('y', data => y(data[0]) - (y(data[0]) - y(data[1])) / 2);
+                    // bar label y pos based on upper data value - 1/2 height of bar
+                    barLabel.attr('y', data => y0(data[0]) - (y0(data[0]) - y0(data[1])) / 2);
                 }
             }
             // get mouse hover
@@ -457,9 +465,9 @@ class D3Visual {
                 .attr('stroke', THRESHOLD_SETTINGS.LineColor)
                 .attr('stroke-width', THRESHOLD_SETTINGS.LineThickness)
                 .attr('x1', 0)
-                .attr('y1', y(thresholdValue))
+                .attr('y1', y1(thresholdValue))
                 .attr('x2', width)
-                .attr('y2', y(thresholdValue));
+                .attr('y2', y1(thresholdValue));
             // sets line type
             if (THRESHOLD_SETTINGS.LineType == 'dashed') {
                 svg.selectAll('.lineValues')
@@ -484,7 +492,7 @@ class D3Visual {
                             .attr('width', sumBgWidth)
                             .attr('height', 20)
                             .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
-                            .attr('y', y(maxVal) - 20)
+                            .attr('y', y0(maxVal) - 20)
                             .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
                         // text
                         svg.append('text')
@@ -495,7 +503,7 @@ class D3Visual {
                             .attr('font-family', DATA_LABEL_SETTINGS.FontFamily)
                             .attr('text-anchor', 'middle')
                             .attr('dominant-baseline', 'middle')
-                            .attr('y', y(maxVal) - 10)
+                            .attr('y', y0(maxVal) - 10)
                             .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2)
                             .text(text);
                     }
@@ -560,15 +568,16 @@ class D3Visual {
                         let months = _interfaces__WEBPACK_IMPORTED_MODULE_2__/* .MonthNames */ .y;
                         // if 12-month prev == 0 find next closest available non-zero month, starting from 12-month prev and incrementing
                         primGrowth1Index = primGrowth2Index - 12 < 0 ? 0 : primGrowth2Index - 12;
-                        // let month = dp.Columns[primGrowth2Index].slice(0,3);
-                        // let year = parseInt(dp.Columns[primGrowth2Index].slice(4));
-                        // year--;
-                        // for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
-                        //     let col = month + '-' + year.toString();
-                        //     if (dp.Columns[primGrowth1Index] != col || !this.getSum(primGrowth1Index)) {
-                        //     }
-                        // }
-                        // console.log(month, year)
+                        let month = _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns */ .oe[primGrowth2Index].slice(0, 3);
+                        let year = parseInt(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns */ .oe[primGrowth2Index].slice(4));
+                        year--;
+                        for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
+                            let col = month + '-' + year.toString();
+                            if (_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns */ .oe[primGrowth1Index] != col || !this.getSum(primGrowth1Index)) {
+                                primGrowth1Index++;
+                                // console.log(dp.Columns[primGrowth1Index])
+                            }
+                        }
                         while (primGrowth1Index < _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns.length */ .oe.length) {
                             // calculates sum for selected month
                             primGrowth1Sum = this.getSum(primGrowth1Index);
@@ -582,13 +591,13 @@ class D3Visual {
                 // define height offset of growth indicator
                 let heightOffset = PRIMARY_LINE_SETTINGS.LineOffsetHeight;
                 // get top y pos
-                let yPos = y(y.domain()[1]);
+                let yPos = y0(y0.domain()[1]);
                 // draw primary growth indicator
                 try {
                     // defines coordinate points for label and line
-                    let growth1Y = y(primGrowth1Sum) - heightOffset;
+                    let growth1Y = y0(primGrowth1Sum) - heightOffset;
                     let growth1X = x(primarySelect1) + x.bandwidth() / 2;
-                    let growth2Y = y(primGrowth2Sum) - heightOffset;
+                    let growth2Y = y0(primGrowth2Sum) - heightOffset;
                     let growth2X = x(primarySelect2) + x.bandwidth() / 2;
                     // defines line coordinates
                     let path = d3__WEBPACK_IMPORTED_MODULE_0__/* .line */ .jvg()([
@@ -655,8 +664,8 @@ class D3Visual {
                     let data2 = maxStackData[secGrowth2Index][1];
                     try {
                         // initializes coordinate points based on bars selected
-                        let growth1Y = y(secGrowth1Sum);
-                        let growth2Y = y(secGrowth2Sum);
+                        let growth1Y = y0(secGrowth1Sum);
+                        let growth2Y = y0(secGrowth2Sum);
                         let growth1X = x(selector1);
                         let growth2X = x(selector2);
                         let averageY = (growth2Y + growth1Y) / 2;
@@ -731,8 +740,8 @@ class D3Visual {
                     if (data1 && data2) {
                         try {
                             // initializes coordinate points based on bars selected
-                            let growth1Y = y(data1) - heightOffset;
-                            let growth2Y = y(data2) - heightOffset;
+                            let growth1Y = y0(data1) - heightOffset;
+                            let growth2Y = y0(data2) - heightOffset;
                             let growth1X = x(dataset.sharedAxis.toString()) + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length * pIdx1;
                             let growth2X = x(dataset.sharedAxis.toString()) + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length * pIdx2;
                             // sets x position to the center of the bar
@@ -740,7 +749,7 @@ class D3Visual {
                             growth2X += x.bandwidth() / (_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length * 2);
                             let averageX = (growth1X + growth2X) / 2;
                             // represents top border of the chart (excluding legend and other labels), defaults to 0
-                            let maxYPos = y(y.domain()[1]);
+                            let maxYPos = y0(y0.domain()[1]);
                             let yPos = maxYPos;
                             // gets y pos for label
                             if (!PRIMARY_LINE_SETTINGS.AlignIndicators) {
@@ -816,8 +825,8 @@ class D3Visual {
                     let data2 = _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .D3Data */ .$m[selIdx][secondarySelect2];
                     try {
                         // initializes coordinate points based on bars selected
-                        let growth1Y = y(data1);
-                        let growth2Y = y(data2);
+                        let growth1Y = y0(data1);
+                        let growth2Y = y0(data2);
                         let averageY = (growth2Y + growth1Y) / 2;
                         // calculates starting x positions for line, defaults to right corner of bar
                         let growth1X = x(selector) + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length * sIdx1;
@@ -1200,7 +1209,6 @@ function calculateNumerics(series) {
 ;
 ;
 let MonthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-// new stuff
 
 
 /***/ }),
@@ -1212,7 +1220,7 @@ let MonthNames = ["January", "February", "March", "April", "May", "June", "July"
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Jx": () => (/* binding */ VisualSettings)
 /* harmony export */ });
-/* unused harmony exports LayoutSettings, AxisLabelSettings, DataColors, DataLabelSettings, LegendSettings, ThresholdSettings, PrimaryGrowthSettings, SecondaryGrowthSettings, PrimaryLabelSettings, PrimaryLineSettings, SecondaryLabelSettings, SecondaryLineSettings */
+/* unused harmony exports LayoutSettings, XAxisSettings, YAxisSettings, SecondaryYAxis, DataColors, DataLabelSettings, LegendSettings, ThresholdSettings, PrimaryGrowthSettings, SecondaryGrowthSettings, PrimaryLabelSettings, PrimaryLineSettings, SecondaryLabelSettings, SecondaryLineSettings */
 /* harmony import */ var powerbi_visuals_utils_dataviewutils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24554);
 /*
  *  Power BI Visualizations
@@ -1245,7 +1253,10 @@ var DataViewObjectsParser = powerbi_visuals_utils_dataviewutils__WEBPACK_IMPORTE
 class VisualSettings extends DataViewObjectsParser {
     constructor() {
         super(...arguments);
-        this.AxisLabelSettings = new AxisLabelSettings();
+        // public AxisSettings: AxisSettings = new AxisSettings();
+        // public AxisLabelSettings: AxisLabelSettings = new AxisLabelSettings();
+        this.XAxisSettings = new XAxisSettings();
+        this.YAxisSettings = new YAxisSettings();
         this.DataLabelSettings = new DataLabelSettings();
         this.ThresholdSettings = new ThresholdSettings();
         this.PrimaryGrowthSettings = new PrimaryGrowthSettings();
@@ -1257,32 +1268,49 @@ class VisualSettings extends DataViewObjectsParser {
         this.PrimaryLineSettings = new PrimaryLineSettings();
         this.SecondaryLabelSettings = new SecondaryLabelSettings();
         this.SecondaryLineSettings = new SecondaryLineSettings();
+        this.SecondaryYAxis = new SecondaryYAxis();
     }
 }
 // initializes default values for all settings
 class LayoutSettings {
     constructor() {
         this.ChartType = 'stacked';
-        this.YMaxValue = 0;
-        this.YAxisCount = 3;
+        this.ChartXMargin = 85;
+        this.ChartYMargin = 70;
         this.XAxisBarWhiteSpace = 0.3;
-        this.ToggleGridLines = true;
-        this.CapacityToggle = true;
     }
 }
-class AxisLabelSettings {
+class XAxisSettings {
+    constructor() {
+        this.CapacityToggle = true;
+        this.FontFamily = 'Calibri';
+        this.FontColor = '#000000';
+        this.FontSize = 11;
+        this.AxisLabelAngle = 0;
+        this.CapacityLabelAngle = 0;
+    }
+}
+class YAxisSettings {
     constructor() {
         this.DisplayUnits = 'auto';
-        this.YAxisText = 'Value';
-        this.XAxisText = 'Period';
-        this.YAxisLabelToggle = false;
-        this.XAxisLabelToggle = false;
+        this.YMaxValue = 0;
+        this.TickCount = 3;
+        this.ToggleGridLines = true;
         this.FontFamily = 'Calibri';
-        this.AxisFontColor = '#000000';
-        this.AxisFontSize = 13;
-        this.AxisValueColor = '#000000';
-        this.AxisValueFontSize = 11;
-        this.AxisLabelAngle = 0;
+        this.FontColor = '#000000';
+        this.FontSize = 11;
+    }
+}
+class SecondaryYAxis {
+    constructor() {
+        this.ToggleOn = false;
+        this.MinValue = 0;
+        this.MaxValue = 500;
+        this.DisplayUnits = 'auto';
+        this.TickCount = 3;
+        this.FontFamily = 'Calibri';
+        this.FontColor = '#000000';
+        this.FontSize = 11;
     }
 }
 class DataColors {
@@ -1308,6 +1336,7 @@ class DataLabelSettings {
 class LegendSettings {
     constructor() {
         this.LegendPosition = 'top';
+        this.LegendMargin = 0;
         this.FontColor = '#000000';
         this.FontFamily = 'Calibri';
         this.FontSize = 13;
@@ -14244,10 +14273,11 @@ var slice = Array.prototype.slice;
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Kh": () => (/* binding */ axisRight),
 /* harmony export */   "LL": () => (/* binding */ axisBottom),
 /* harmony export */   "y4": () => (/* binding */ axisLeft)
 /* harmony export */ });
-/* unused harmony exports axisTop, axisRight */
+/* unused harmony export axisTop */
 /* harmony import */ var _array__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(94844);
 /* harmony import */ var _identity__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(39985);
 
@@ -14447,6 +14477,7 @@ function axisLeft(scale) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Kh": () => (/* reexport safe */ _axis__WEBPACK_IMPORTED_MODULE_0__.Kh),
 /* harmony export */   "LL": () => (/* reexport safe */ _axis__WEBPACK_IMPORTED_MODULE_0__.LL),
 /* harmony export */   "y4": () => (/* reexport safe */ _axis__WEBPACK_IMPORTED_MODULE_0__.y4)
 /* harmony export */ });
@@ -25077,6 +25108,7 @@ var dependencies = {"d3-array":"1","d3-axis":"1","d3-brush":"1","d3-chord":"1","
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "LLu": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.LL),
 /* harmony export */   "y4O": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.y4),
+/* harmony export */   "Khx": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.Kh),
 /* harmony export */   "tiA": () => (/* reexport safe */ d3_scale__WEBPACK_IMPORTED_MODULE_9__.ti),
 /* harmony export */   "BYU": () => (/* reexport safe */ d3_scale__WEBPACK_IMPORTED_MODULE_9__.BY),
 /* harmony export */   "Ba6": () => (/* reexport safe */ d3_selection__WEBPACK_IMPORTED_MODULE_10__.B),

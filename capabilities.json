@@ -102,20 +102,14 @@
                         ]
                     }
                 },
-                "CapacityToggle": {
-                    "displayName": "Show Capacity",
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "YMaxValue": {
-                    "displayName": "Max Y Value",
+                "ChartXMargin": {
+                    "displayName": "Chart Horizontal Margin",
                     "type": {
                         "numeric": true
                     }
                 },
-                "YAxisCount": {
-                    "displayName": "Y-Axis Tick Count",
+                "ChartYMargin": {
+                    "displayName": "Chart Vertical Margin",
                     "type": {
                         "numeric": true
                     }
@@ -125,18 +119,65 @@
                     "type": {
                         "numeric": true
                     }
-                },
-                "ToggleGridLines": {
-                    "displayName": "Show Grid Lines",
+                }
+            }
+        },
+        "XAxisSettings": {
+            "displayName": "X-Axis",
+            "properties": {
+                "CapacityToggle": {
+                    "displayName": "Show Capacity",
                     "type": {
                         "bool": true
+                    }
+                },
+                "FontFamily": {
+                    "displayName": "Font Family",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "FontColor": {
+                    "displayName": "Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "FontSize": {
+                    "displayName": "Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "AxisLabelAngle": {
+                    "displayName": "Label Rotation",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "CapacityLabelAngle": {
+                    "displayName": "Capacity Label Rotation",
+                    "type": {
+                        "numeric": true
                     }
                 }
             }
         },
-        "AxisLabelSettings": {
-            "displayName": "Axis Labels",
+        "YAxisSettings": {
+            "displayName": "Y-Axis",
             "properties": {
+                "YMaxValue": {
+                    "displayName": "Max Value",
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "DisplayUnits": {
                     "displayName": "Display Units",
                     "type": {
@@ -168,28 +209,100 @@
                         ]
                     }
                 },
-                "YAxisText": {
-                    "displayName": "Y-Axis Label Text",
+                "FontFamily": {
+                    "displayName": "Font Family",
                     "type": {
-                        "text": true
+                        "formatting": {
+                            "fontFamily": true
+                        }
                     }
                 },
-                "YAxisLabelToggle": {
-                    "displayName": "Show Y-Axis Label",
+                "FontColor": {
+                    "displayName": "Font Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "FontSize": {
+                    "displayName": "Font Size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "TickCount": {
+                    "displayName": "Axis Tick Count",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "ToggleGridLines": {
+                    "displayName": "Show Grid Lines",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "SecondaryYAxis": {
+            "displayName": "Secondary Y-Axis",
+            "properties": {
+                "ToggleOn": {
+                    "displayName": "Show Secondary Y-Axis",
                     "type": {
                         "bool": true
                     }
                 },
-                "XAxisText": {
-                    "displayName": "X-Axis Label Text",
+                "MinValue": {
+                    "displayName": "Min Value",
                     "type": {
-                        "text": true
+                        "numeric": true
                     }
                 },
-                "XAxisLabelToggle": {
-                    "displayName": "Show X-Axis Label",
+                "MaxValue": {
+                    "displayName": "Max Value",
                     "type": {
-                        "bool": true
+                        "numeric": true
+                    }
+                },
+                "TickCount": {
+                    "displayName": "Axis Tick Count",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "DisplayUnits": {
+                    "displayName": "Display Units",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "auto",
+                                "displayName": "Auto"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "None"
+                            },
+                            {
+                                "value": "thousands",
+                                "displayName": "Thousands"
+                            },
+                            {
+                                "value": "millions",
+                                "displayName": "Millions"
+                            },
+                            {
+                                "value": "billions",
+                                "displayName": "Billions"
+                            },
+                            {
+                                "value": "trillions",
+                                "displayName": "Trillions"
+                            }
+                        ]
                     }
                 },
                 "FontFamily": {
@@ -200,14 +313,8 @@
                         }
                     }
                 },
-                "AxisFontSize": {
-                    "displayName": "Axis Label Font Size",
-                    "type": {
-                        "numeric": true
-                    }
-                },
-                "AxisFontColor": {
-                    "displayName": "Axis Label Font Color",
+                "FontColor": {
+                    "displayName": "Font Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -216,30 +323,8 @@
                         }
                     }
                 },
-                "AxisValueColor": {
-                    "displayName": "Axis Value Font Color",
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "AxisValueFontSize": {
-                    "displayName": "Axis Value Font Size",
-                    "type": {
-                        "numeric": true
-                    }
-                },
-                "AxisLabelAngle": {
-                    "displayName": "X-Axis Values Rotation",
-                    "type": {
-                        "numeric": true
-                    }
-                },
-                "CapacityLabelAngle": {
-                    "displayName": "Capacity Label Rotation",
+                "FontSize": {
+                    "displayName": "Font Size",
                     "type": {
                         "numeric": true
                     }
@@ -395,6 +480,12 @@
                                 "displayName": "Left"
                             }
                         ]
+                    }
+                },
+                "LegendMargin": {
+                    "displayName": "Legend Y Position",
+                    "type": {
+                        "numeric": true
                     }
                 },
                 "FontColor": {

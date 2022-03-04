@@ -23,6 +23,16 @@ The code has also (in my opinion😄) been thoroughly commented, though it may s
 - Add data
 
 # Updating Code
-- We're assuming that you already know how to use version control (if not, youtube has lots of tutorials 🤓). Since both myself and the original dev of this chart will probably be gone by the time any future devs are reading this, feel free to just copy the code and make a new repo. 
+- We're assuming that you already know how to use version control (if not, youtube has lots of tutorials 🤓). Since both myself and the original dev of this chart will be gone by the time any future devs are reading this, feel free to just copy the code and make a new repo. 
 - When you're exporting the code to a file, run `pbiviz package` if it's not automatically updating when you run `pbiviz start`.
 - Might sound kinda obvious but having the console open is super helpful during development, lets you print things etc.
+
+# Resources
+- PowerBI Visuals Documentation https://docs.microsoft.com/en-us/power-bi/developer/visuals/
+- PowerBI Dev Camp https://www.powerbidevcamp.net/
+- Typescript Handbook https://www.typescriptlang.org/docs/handbook/intro.html
+- D3 documentation https://d3js.org/
+- D3 videos https://www.youtube.com/watch?v=TOJ9yjvlapY&list=RDCMUCSJbGtTlrDami-tDGPUV9-w&start_radio=1&rv=TOJ9yjvlapY&t=0
+
+
+Good luck! 😄

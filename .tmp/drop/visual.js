@@ -45,7 +45,6 @@ class D3Visual {
     CreateVisualContainer() {
         // gets settings
         const LAYOUT_SETTINGS = this._settings.LayoutSettings;
-        // const AXIS_LABEL_SETTINGS = this._settings.AxisLabelSettings;
         const X_AXIS_SETTINGS = this._settings.XAxisSettings;
         const Y_AXIS_SETTINGS = this._settings.YAxisSettings;
         const DATA_LABEL_SETTINGS = this._settings.DataLabelSettings;
@@ -90,6 +89,7 @@ class D3Visual {
         let width = svgSelector.offsetWidth - xPadding;
         let height = svgSelector.offsetHeight - yPadding;
         let marginTop = 40;
+        // adjusts padding to add more space for legend
         if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
             height = this.dimension.height - yPadding;
             marginTop = 20;
@@ -112,82 +112,94 @@ class D3Visual {
             .padding(LAYOUT_SETTINGS.XAxisBarWhiteSpace);
         // set x axis
         let xAxis = d3__WEBPACK_IMPORTED_MODULE_0__/* .axisBottom */ .LLu(x);
-        // set x axis g
+        // set x axis group
         let xAxisG = svg.append('g')
             .classed('x-axis-g', true);
         // create x axis attr call
         let setXAxisGAttr = g => {
-            g.selectAll('.domain').remove();
-            g.selectAll('line').remove();
-            g.selectAll('text')
-                .attr('transform', `rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
-                .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle')
+            g.selectAll('line').remove(); // removes gridlines
+            // font settings
+            g.selectAll('.x-axis-g text')
                 .style('fill', X_AXIS_SETTINGS.FontColor)
                 .style('font-family', X_AXIS_SETTINGS.FontFamily)
                 .style('font-size', X_AXIS_SETTINGS.FontSize);
+            // independent rotation for capacity
+            g.selectAll('.x-axis-g text')
+                .filter(x => x == 'Capacity')
+                .attr('transform', `rotate(-${X_AXIS_SETTINGS.CapacityLabelAngle})`)
+                .style('text-anchor', X_AXIS_SETTINGS.CapacityLabelAngle ? 'end' : 'middle');
+            // all other labels
+            g.selectAll('.x-axis-g text')
+                .filter(x => x != 'Capacity')
+                .attr('transform', `rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
+                .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle');
         };
+        // render x axis
+        xAxisG.attr('transform', `translate(0, ${height})`)
+            .call(xAxis)
+            .call(setXAxisGAttr);
         // set y axis value
         let y0 = d3__WEBPACK_IMPORTED_MODULE_0__/* .scaleLinear */ .BYU()
             .domain([0, 500])
             .range([height, 0]);
         // set y axis
         let yAxis = d3__WEBPACK_IMPORTED_MODULE_0__/* .axisLeft */ .y4O(y0)
-            .tickSize(-width)
+            .tickSize(-width) // draws horizontal gridline across the chart
             .tickFormat(data => {
             // formats y-axis labels with appropriate units
             return nFormatter(parseInt(data.toString()), 3, Y_AXIS_SETTINGS.DisplayUnits);
         });
-        // set y axis g
+        // set y axis group
         let yAxisG = svg.append('g')
             .classed('y-axis-g', true);
         // create y axis attr call
         let setYAxisGAttr = _ => {
-            d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('.domain').remove();
             d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('line')
                 .attr('stroke-dasharray', '1,3')
                 .attr('stroke', 'grey')
                 .attr('stroke-width', +Y_AXIS_SETTINGS.ToggleGridLines)
+                .style('fill', Y_AXIS_SETTINGS.FontColor);
+            d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('.y-axis-g text')
                 .style('fill', Y_AXIS_SETTINGS.FontColor)
                 .style('font-family', Y_AXIS_SETTINGS.FontFamily)
                 .style('font-size', Y_AXIS_SETTINGS.FontSize);
         };
-        let minVal = SECONDARY_Y_AXIS.MinValue;
-        let maxVal = SECONDARY_Y_AXIS.MaxValue;
-        let y1 = d3__WEBPACK_IMPORTED_MODULE_0__/* .scaleLinear */ .BYU()
-            .domain([minVal, maxVal])
-            .range([height, 0]);
-        let secondaryYAxis = d3__WEBPACK_IMPORTED_MODULE_0__/* .axisRight */ .Khx(y1)
-            .tickFormat(data => {
-            return nFormatter(parseInt(data.toString()), 3, SECONDARY_Y_AXIS.DisplayUnits);
-        });
-        let secondaryYAxisG = svg.append('g')
-            .classed('y-axis-g', true)
-            .attr('transform', `translate(${width}, 0)`);
-        // render x axis
-        xAxisG.attr('transform', `translate(0, ${height})`)
-            .call(xAxis)
-            .call(setXAxisGAttr);
         // render y axis
         yAxisG.call(yAxis.ticks(Y_AXIS_SETTINGS.TickCount))
             .call(setYAxisGAttr);
-        d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys('line')
-            .filter((d, i) => i == 0)
-            .remove();
-        // d3.select('line')
-        //     .filter(function (d, i) {console.log(d, i); return i == 0})
-        //     .remove();
-        if (SECONDARY_Y_AXIS.ToggleOn) {
-            secondaryYAxisG.call(secondaryYAxis.ticks(SECONDARY_Y_AXIS.TickCount))
-                .call(setYAxisGAttr);
-        }
-        // hide origin label
-        // values are mostly hard-coded in, not sure if there's a better way
-        svg.append('rect')
-            .attr('width', Y_AXIS_SETTINGS.FontSize)
-            .attr('height', Y_AXIS_SETTINGS.FontSize)
-            .attr('fill', '#ffffff')
-            .attr('y', height - 6)
-            .attr('x', -Y_AXIS_SETTINGS.FontSize);
+        let minVal = SECONDARY_Y_AXIS.MinValue;
+        let maxVal = SECONDARY_Y_AXIS.MaxValue;
+        // setting secondary y axis scale
+        let y1 = d3__WEBPACK_IMPORTED_MODULE_0__/* .scaleLinear */ .BYU()
+            .domain([minVal, maxVal])
+            .range([height, 0]);
+        // set properties
+        let secYAxis = d3__WEBPACK_IMPORTED_MODULE_0__/* .axisRight */ .Khx(y1)
+            .tickFormat(data => {
+            return nFormatter(parseInt(data.toString()), 3, SECONDARY_Y_AXIS.DisplayUnits);
+        });
+        // create group
+        let secYAxisG = svg.append('g')
+            .classed('sec-y-axis-g', true)
+            .attr('transform', `translate(${width}, 0)`);
+        // style text
+        let setSecYAxisGAttr = _ => {
+            d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('.sec-y-axis-g line')
+                .remove();
+            if (SECONDARY_Y_AXIS.ToggleOn) {
+                d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('.sec-y-axis-g text')
+                    .style('fill', SECONDARY_Y_AXIS.FontColor)
+                    .style('font-family', SECONDARY_Y_AXIS.FontFamily)
+                    .style('font-size', SECONDARY_Y_AXIS.FontSize);
+            }
+            else {
+                d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('.sec-y-axis-g text')
+                    .style('fill', '#ffffff');
+            }
+        };
+        // render secondary y axis
+        secYAxisG.call(secYAxis.ticks(SECONDARY_Y_AXIS.TickCount))
+            .call(setSecYAxisGAttr);
         // generate stack
         let serieStack = d3__WEBPACK_IMPORTED_MODULE_0__/* .stack */ .knu().keys(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series */ .FH);
         let stackData = serieStack(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .D3Data */ .$m);
@@ -195,11 +207,14 @@ class D3Visual {
         // create legend
         let legendRectHeight = 15;
         let legendHorizontalPadding = 30;
+        // creates group with class legend for each data element
         let legend = legendSvg.selectAll('.legend')
             .data(stackData)
             .enter()
             .append('g')
             .classed('legend', true);
+        // the following code will dynamically position each g element
+        // and then append the appropriate text label and color
         let legendWidth = 0;
         // true width gets actual width of chart 
         // useful for secondary growth indicator and legend
@@ -208,8 +223,14 @@ class D3Visual {
         _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.forEach */ .FH.forEach(serieName => {
             // gets width
             let nameWidth = this.getTextWidth(serieName, LEGEND_SETTINGS);
-            // calculates legend width
-            legendWidth += nameWidth + legendHorizontalPadding;
+            if (LEGEND_SETTINGS.LegendPosition == 'left') {
+                // sets longest name as legend width
+                legendWidth = Math.max(nameWidth, legendWidth);
+            }
+            else {
+                // sets sum of names as legend width
+                legendWidth += nameWidth + legendHorizontalPadding;
+            }
         });
         // checks if legend exceeds chart borders
         legendWidth = legendWidth > trueWidth ? trueWidth : legendWidth;
@@ -272,6 +293,10 @@ class D3Visual {
             legendColor.attr('y', legendSelector.offsetHeight - legendMargin - 10);
             legendText.attr('y', legendSelector.offsetHeight - legendMargin);
         }
+        else if (LEGEND_SETTINGS.LegendPosition == 'left') {
+            // adds margin for legend
+            svg.style('margin-left', `${legendWidth + 40}px`);
+        }
         // hover info text
         let hoverInfoDiv = d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys('body')
             .append('div')
@@ -332,6 +357,20 @@ class D3Visual {
                 y0.domain([0, yMax ? yMax : localRange]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
+                // removes first label
+                d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys('.y-axis-g > .tick')
+                    .filter((d, i) => i == 0)
+                    .remove();
+                // set secondary y axis
+                y1.domain([minVal, maxVal ? maxVal : localRange]);
+                secYAxisG.call(secYAxis)
+                    .call(setSecYAxisGAttr);
+                // removes 0 label
+                d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys('.sec-y-axis-g > .tick')
+                    .filter(d => d == 0)
+                    .remove();
+                // removes border
+                d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('.domain').remove();
                 // set bar positions & height
                 bar.data(serie)
                     // x pos is based off x-axis value + width of bars before
@@ -346,7 +385,13 @@ class D3Visual {
                     barLabel.text(data => {
                         let val = data.data[_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series */ .FH[idx]]; // gets data value
                         let barHeight = y0(data[0]) - y0(data[1]); // gets bar height
-                        return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
+                        let maxTextWidth = x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length + DATA_LABEL_SETTINGS.BarLabelDisplayTolerance; // max allowable text width
+                        val = nFormatter(val.toString(), displayDigits, displayUnits);
+                        if (this.getTextWidth(val, DATA_LABEL_SETTINGS) > maxTextWidth ||
+                            barHeight <= DATA_LABEL_SETTINGS.BarLabelFontSize) {
+                            return null;
+                        }
+                        return val;
                     });
                     // sets x pos of label based on x-axis value + widths of bars before + 1/2 current bar width
                     barLabel.attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length * idx + x.bandwidth() / _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series.length */ .FH.length / 2)
@@ -359,6 +404,20 @@ class D3Visual {
                 y0.domain([0, yMax ? yMax : Math.ceil(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .DataNumeric.max */ .l6.max * 1.2)]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
+                // removes 0 label
+                d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys('.y-axis-g > .tick')
+                    .filter((d, i) => i == 0)
+                    .remove();
+                // set secondary y axis
+                y1.domain([minVal, maxVal ? maxVal : Math.ceil(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .DataNumeric.max */ .l6.max * 1.2)]);
+                secYAxisG.call(secYAxis)
+                    .call(setSecYAxisGAttr);
+                // removes 0 label
+                d3__WEBPACK_IMPORTED_MODULE_0__/* .select */ .Ys('.sec-y-axis-g > .tick')
+                    .filter((d, i) => i == 0)
+                    .remove();
+                // removes border
+                d3__WEBPACK_IMPORTED_MODULE_0__/* .selectAll */ .td_('.domain').remove();
                 // set bar heights
                 bar.data(serie)
                     .attr('y', data => y0(data[1]))
@@ -366,9 +425,15 @@ class D3Visual {
                 // show text if bar height allows
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
                     barLabel.text(data => {
-                        let barHeight = y0(data[0]) - y0(data[1]);
-                        let val = data.data[_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series */ .FH[idx]];
-                        return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
+                        let barHeight = y0(data[0]) - y0(data[1]); // get bar height
+                        let val = data.data[_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Series */ .FH[idx]]; // get data value
+                        let maxTextWidth = x.bandwidth() + DATA_LABEL_SETTINGS.BarLabelDisplayTolerance; // max allowable text width
+                        val = nFormatter(val.toString(), displayDigits, displayUnits);
+                        if (this.getTextWidth(val, DATA_LABEL_SETTINGS) > maxTextWidth ||
+                            barHeight <= DATA_LABEL_SETTINGS.BarLabelFontSize) {
+                            return null;
+                        }
+                        return val;
                     });
                     // bar label y pos based on upper data value - 1/2 height of bar
                     barLabel.attr('y', data => y0(data[0]) - (y0(data[0]) - y0(data[1])) / 2);
@@ -486,8 +551,8 @@ class D3Visual {
                     let text = nFormatter(maxVal, displayDigits, displayUnits);
                     // display value if bar width allows
                     if (x.bandwidth() > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
-                        // background
                         let sumBgWidth = x.bandwidth();
+                        // background
                         svg.append('rect')
                             .attr('width', sumBgWidth)
                             .attr('height', 20)
@@ -1049,12 +1114,12 @@ function nFormatter(num, digits, displayUnits) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "VM": () => (/* binding */ LineValues),
-/* harmony export */   "FH": () => (/* binding */ Series),
-/* harmony export */   "l6": () => (/* binding */ DataNumeric),
 /* harmony export */   "$m": () => (/* binding */ D3Data),
-/* harmony export */   "oe": () => (/* binding */ Columns),
-/* harmony export */   "Jl": () => (/* binding */ transformData)
+/* harmony export */   "FH": () => (/* binding */ Series),
+/* harmony export */   "Jl": () => (/* binding */ transformData),
+/* harmony export */   "VM": () => (/* binding */ LineValues),
+/* harmony export */   "l6": () => (/* binding */ DataNumeric),
+/* harmony export */   "oe": () => (/* binding */ Columns)
 /* harmony export */ });
 /* unused harmony exports Capacity, calculateNumerics */
 /* harmony import */ var _interfaces__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(63003);
@@ -1305,7 +1370,7 @@ class SecondaryYAxis {
     constructor() {
         this.ToggleOn = false;
         this.MinValue = 0;
-        this.MaxValue = 500;
+        this.MaxValue = 0;
         this.DisplayUnits = 'auto';
         this.TickCount = 3;
         this.FontFamily = 'Calibri';
@@ -1331,6 +1396,7 @@ class DataLabelSettings {
         this.BarLabelToggle = true;
         this.BarLabelColor = '#000000';
         this.BarLabelFontSize = 10;
+        this.BarLabelDisplayTolerance = 15;
     }
 }
 class LegendSettings {
@@ -14108,11 +14174,11 @@ function ascendingComparator(f) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "b4": () => (/* reexport safe */ _bisect__WEBPACK_IMPORTED_MODULE_0__.ZP),
-/* harmony export */   "w6": () => (/* reexport safe */ _range__WEBPACK_IMPORTED_MODULE_3__.Z),
-/* harmony export */   "sd": () => (/* reexport safe */ _ticks__WEBPACK_IMPORTED_MODULE_4__.ZP),
 /* harmony export */   "G9": () => (/* reexport safe */ _ticks__WEBPACK_IMPORTED_MODULE_4__.G9),
-/* harmony export */   "ly": () => (/* reexport safe */ _ticks__WEBPACK_IMPORTED_MODULE_4__.ly)
+/* harmony export */   "b4": () => (/* reexport safe */ _bisect__WEBPACK_IMPORTED_MODULE_0__.ZP),
+/* harmony export */   "ly": () => (/* reexport safe */ _ticks__WEBPACK_IMPORTED_MODULE_4__.ly),
+/* harmony export */   "sd": () => (/* reexport safe */ _ticks__WEBPACK_IMPORTED_MODULE_4__.ZP),
+/* harmony export */   "w6": () => (/* reexport safe */ _range__WEBPACK_IMPORTED_MODULE_3__.Z)
 /* harmony export */ });
 /* harmony import */ var _bisect__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(44355);
 /* harmony import */ var _histogram__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(902);
@@ -14197,8 +14263,8 @@ function ascendingComparator(f) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ZP": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
 /* harmony export */   "G9": () => (/* binding */ tickIncrement),
+/* harmony export */   "ZP": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
 /* harmony export */   "ly": () => (/* binding */ tickStep)
 /* harmony export */ });
 var e10 = Math.sqrt(50),
@@ -15605,8 +15671,8 @@ function set(object, f) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ZP": () => (/* binding */ color),
-/* harmony export */   "B8": () => (/* binding */ rgb)
+/* harmony export */   "B8": () => (/* binding */ rgb),
+/* harmony export */   "ZP": () => (/* binding */ color)
 /* harmony export */ });
 /* unused harmony exports Color, darker, brighter, rgbConvert, Rgb, hslConvert, hsl */
 /* harmony import */ var _define_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(44087);
@@ -16990,8 +17056,8 @@ function defaultLocale(definition) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
-/* harmony export */   "V": () => (/* binding */ formatDecimalParts)
+/* harmony export */   "V": () => (/* binding */ formatDecimalParts),
+/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony default export */ function __WEBPACK_DEFAULT_EXPORT__(x) {
   return Math.abs(x = Math.round(x)) >= 1e21
@@ -17069,8 +17135,8 @@ function formatDecimalParts(x, p) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "y": () => (/* binding */ prefixExponent),
-/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   "y": () => (/* binding */ prefixExponent)
 /* harmony export */ });
 /* harmony import */ var _formatDecimal_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(38885);
 
@@ -17502,8 +17568,8 @@ function genericArray(a, b) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "t": () => (/* binding */ basis),
-/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   "t": () => (/* binding */ basis)
 /* harmony export */ });
 function basis(t1, v0, v1, v2, v3) {
   var t2 = t1 * t1, t3 = t2 * t1;
@@ -17558,8 +17624,8 @@ function basis(t1, v0, v1, v2, v3) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "yi": () => (/* binding */ gamma),
-/* harmony export */   "ZP": () => (/* binding */ nogamma)
+/* harmony export */   "ZP": () => (/* binding */ nogamma),
+/* harmony export */   "yi": () => (/* binding */ gamma)
 /* harmony export */ });
 /* unused harmony export hue */
 /* harmony import */ var _constant_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(55302);
@@ -17874,8 +17940,8 @@ function one(b) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "y": () => (/* binding */ identity),
-/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   "y": () => (/* binding */ identity)
 /* harmony export */ });
 var degrees = 180 / Math.PI;
 
@@ -17989,8 +18055,8 @@ var interpolateTransformSvg = interpolateTransform(_parse_js__WEBPACK_IMPORTED_M
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "z": () => (/* binding */ parseCss),
-/* harmony export */   "X": () => (/* binding */ parseSvg)
+/* harmony export */   "X": () => (/* binding */ parseSvg),
+/* harmony export */   "z": () => (/* binding */ parseCss)
 /* harmony export */ });
 /* harmony import */ var _decompose_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(36511);
 
@@ -18555,9 +18621,9 @@ function point() {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "yR": () => (/* binding */ identity),
 /* harmony export */   "JG": () => (/* binding */ copy),
-/* harmony export */   "ZP": () => (/* binding */ continuous)
+/* harmony export */   "ZP": () => (/* binding */ continuous),
+/* harmony export */   "yR": () => (/* binding */ identity)
 /* harmony export */ });
 /* unused harmony export transformer */
 /* harmony import */ var d3_array__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(80091);
@@ -18846,8 +18912,8 @@ function identity(domain) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ti": () => (/* reexport safe */ _band__WEBPACK_IMPORTED_MODULE_0__.Z),
-/* harmony export */   "BY": () => (/* reexport safe */ _linear__WEBPACK_IMPORTED_MODULE_2__.Z)
+/* harmony export */   "BY": () => (/* reexport safe */ _linear__WEBPACK_IMPORTED_MODULE_2__.Z),
+/* harmony export */   "ti": () => (/* reexport safe */ _band__WEBPACK_IMPORTED_MODULE_0__.Z)
 /* harmony export */ });
 /* harmony import */ var _band__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(49649);
 /* harmony import */ var _identity__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(29898);
@@ -19962,9 +20028,9 @@ function creatorFixed(fullname) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "B": () => (/* reexport safe */ _selection_on__WEBPACK_IMPORTED_MODULE_2__.B),
 /* harmony export */   "Ys": () => (/* reexport safe */ _select__WEBPACK_IMPORTED_MODULE_0__.Z),
-/* harmony export */   "td": () => (/* reexport safe */ _selectAll__WEBPACK_IMPORTED_MODULE_1__.Z),
-/* harmony export */   "B": () => (/* reexport safe */ _selection_on__WEBPACK_IMPORTED_MODULE_2__.B)
+/* harmony export */   "td": () => (/* reexport safe */ _selectAll__WEBPACK_IMPORTED_MODULE_1__.Z)
 /* harmony export */ });
 /* harmony import */ var _select__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(94017);
 /* harmony import */ var _selectAll__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(19628);
@@ -20535,8 +20601,8 @@ function dispatchFunction(type, params) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
-/* harmony export */   "F": () => (/* binding */ EnterNode)
+/* harmony export */   "F": () => (/* binding */ EnterNode),
+/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var _sparse__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(60327);
 /* harmony import */ var _index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3933);
@@ -21255,8 +21321,8 @@ function ascending(a, b) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
-/* harmony export */   "S": () => (/* binding */ styleValue)
+/* harmony export */   "S": () => (/* binding */ styleValue),
+/* harmony export */   "Z": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var _window__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(85021);
 
@@ -21463,9 +21529,9 @@ Linear.prototype = {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "jv": () => (/* reexport safe */ _line_js__WEBPACK_IMPORTED_MODULE_0__.Z),
 /* harmony export */   "NA": () => (/* reexport safe */ _symbol_js__WEBPACK_IMPORTED_MODULE_1__.Z),
 /* harmony export */   "P6": () => (/* reexport safe */ _symbol_triangle_js__WEBPACK_IMPORTED_MODULE_2__.Z),
+/* harmony export */   "jv": () => (/* reexport safe */ _line_js__WEBPACK_IMPORTED_MODULE_0__.Z),
 /* harmony export */   "kn": () => (/* reexport safe */ _stack_js__WEBPACK_IMPORTED_MODULE_3__.Z)
 /* harmony export */ });
 /* harmony import */ var _line_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(25049);
@@ -21597,8 +21663,8 @@ Linear.prototype = {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "pi": () => (/* binding */ pi),
-/* harmony export */   "BZ": () => (/* binding */ tau)
+/* harmony export */   "BZ": () => (/* binding */ tau),
+/* harmony export */   "pi": () => (/* binding */ pi)
 /* harmony export */ });
 /* unused harmony exports abs, atan2, cos, max, min, sin, sqrt, epsilon, halfPi, acos, asin */
 var abs = Math.abs;
@@ -22035,9 +22101,9 @@ var c = -0.5,
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "zO": () => (/* binding */ now),
 /* harmony export */   "B7": () => (/* binding */ Timer),
-/* harmony export */   "HT": () => (/* binding */ timer)
+/* harmony export */   "HT": () => (/* binding */ timer),
+/* harmony export */   "zO": () => (/* binding */ now)
 /* harmony export */ });
 /* unused harmony export timerFlush */
 /* provided dependency */ var window = __webpack_require__(26738);
@@ -22650,8 +22716,8 @@ function easeConstant(id, value) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "uT": () => (/* binding */ Transition),
-/* harmony export */   "pZ": () => (/* binding */ newId)
+/* harmony export */   "pZ": () => (/* binding */ newId),
+/* harmony export */   "uT": () => (/* binding */ Transition)
 /* harmony export */ });
 /* unused harmony export default */
 /* harmony import */ var d3_selection__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(3933);
@@ -22874,12 +22940,12 @@ function removeFunction(id) {
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "KE": () => (/* binding */ STARTING),
-/* harmony export */   "wS": () => (/* binding */ ENDING),
 /* harmony export */   "Ku": () => (/* binding */ ENDED),
-/* harmony export */   "ZP": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
 /* harmony export */   "S1": () => (/* binding */ init),
+/* harmony export */   "U2": () => (/* binding */ get),
+/* harmony export */   "ZP": () => (/* export default binding */ __WEBPACK_DEFAULT_EXPORT__),
 /* harmony export */   "t8": () => (/* binding */ set),
-/* harmony export */   "U2": () => (/* binding */ get)
+/* harmony export */   "wS": () => (/* binding */ ENDING)
 /* harmony export */ });
 /* unused harmony exports CREATED, SCHEDULED, STARTED, RUNNING */
 /* harmony import */ var d3_dispatch__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(92626);
@@ -23681,10 +23747,10 @@ function rightBreakPoint(arc, directrix) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "kE": () => (/* binding */ createCell),
-/* harmony export */   "BO": () => (/* binding */ cellHalfedgeStart),
 /* harmony export */   "A1": () => (/* binding */ sortCellHalfedges),
-/* harmony export */   "iu": () => (/* binding */ clipCells)
+/* harmony export */   "BO": () => (/* binding */ cellHalfedgeStart),
+/* harmony export */   "iu": () => (/* binding */ clipCells),
+/* harmony export */   "kE": () => (/* binding */ createCell)
 /* harmony export */ });
 /* unused harmony export cellHalfedgeEnd */
 /* harmony import */ var _Edge__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(20364);
@@ -23824,9 +23890,9 @@ function clipCells(x0, y0, x1, y1) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "pk": () => (/* binding */ firstCircle),
+/* harmony export */   "No": () => (/* binding */ detachCircle),
 /* harmony export */   "Z6": () => (/* binding */ attachCircle),
-/* harmony export */   "No": () => (/* binding */ detachCircle)
+/* harmony export */   "pk": () => (/* binding */ firstCircle)
 /* harmony export */ });
 /* harmony import */ var _RedBlackTree__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(31791);
 /* harmony import */ var _Diagram__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(62119);
@@ -23917,12 +23983,12 @@ function detachCircle(arc) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "$Y": () => (/* binding */ edges),
 /* harmony export */   "Ho": () => (/* binding */ epsilon),
-/* harmony export */   "aW": () => (/* binding */ epsilon2),
 /* harmony export */   "U9": () => (/* binding */ beaches),
-/* harmony export */   "gF": () => (/* binding */ cells),
+/* harmony export */   "aW": () => (/* binding */ epsilon2),
 /* harmony export */   "bf": () => (/* binding */ circles),
-/* harmony export */   "$Y": () => (/* binding */ edges)
+/* harmony export */   "gF": () => (/* binding */ cells)
 /* harmony export */ });
 /* unused harmony export default */
 /* harmony import */ var _Beach__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(76629);
@@ -24081,9 +24147,9 @@ Diagram.prototype = {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "jN": () => (/* binding */ createEdge),
-/* harmony export */   "UV": () => (/* binding */ createBorderEdge),
 /* harmony export */   "FK": () => (/* binding */ setEdgeEnd),
+/* harmony export */   "UV": () => (/* binding */ createBorderEdge),
+/* harmony export */   "jN": () => (/* binding */ createEdge),
 /* harmony export */   "zb": () => (/* binding */ clipEdges)
 /* harmony export */ });
 /* harmony import */ var _Diagram__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(62119);
@@ -24264,8 +24330,8 @@ function clipEdges(x0, y0, x1, y1) {
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "q": () => (/* binding */ RedBlackNode),
-/* harmony export */   "Z": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "Z": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   "q": () => (/* binding */ RedBlackNode)
 /* harmony export */ });
 function RedBlackTree() {
   this._ = null; // root node
@@ -25106,18 +25172,18 @@ var dependencies = {"d3-array":"1","d3-axis":"1","d3-brush":"1","d3-chord":"1","
 
 "use strict";
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "LLu": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.LL),
-/* harmony export */   "y4O": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.y4),
-/* harmony export */   "Khx": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.Kh),
-/* harmony export */   "tiA": () => (/* reexport safe */ d3_scale__WEBPACK_IMPORTED_MODULE_9__.ti),
 /* harmony export */   "BYU": () => (/* reexport safe */ d3_scale__WEBPACK_IMPORTED_MODULE_9__.BY),
 /* harmony export */   "Ba6": () => (/* reexport safe */ d3_selection__WEBPACK_IMPORTED_MODULE_10__.B),
+/* harmony export */   "Khx": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.Kh),
+/* harmony export */   "LLu": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.LL),
+/* harmony export */   "NAG": () => (/* reexport safe */ d3_shape__WEBPACK_IMPORTED_MODULE_11__.NA),
+/* harmony export */   "P67": () => (/* reexport safe */ d3_shape__WEBPACK_IMPORTED_MODULE_11__.P6),
 /* harmony export */   "Ys": () => (/* reexport safe */ d3_selection__WEBPACK_IMPORTED_MODULE_10__.Ys),
-/* harmony export */   "td_": () => (/* reexport safe */ d3_selection__WEBPACK_IMPORTED_MODULE_10__.td),
 /* harmony export */   "jvg": () => (/* reexport safe */ d3_shape__WEBPACK_IMPORTED_MODULE_11__.jv),
 /* harmony export */   "knu": () => (/* reexport safe */ d3_shape__WEBPACK_IMPORTED_MODULE_11__.kn),
-/* harmony export */   "NAG": () => (/* reexport safe */ d3_shape__WEBPACK_IMPORTED_MODULE_11__.NA),
-/* harmony export */   "P67": () => (/* reexport safe */ d3_shape__WEBPACK_IMPORTED_MODULE_11__.P6)
+/* harmony export */   "td_": () => (/* reexport safe */ d3_selection__WEBPACK_IMPORTED_MODULE_10__.td),
+/* harmony export */   "tiA": () => (/* reexport safe */ d3_scale__WEBPACK_IMPORTED_MODULE_9__.ti),
+/* harmony export */   "y4O": () => (/* reexport safe */ d3_axis__WEBPACK_IMPORTED_MODULE_2__.y4)
 /* harmony export */ });
 /* harmony import */ var _dist_package_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(32156);
 /* harmony import */ var d3_array__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(80091);

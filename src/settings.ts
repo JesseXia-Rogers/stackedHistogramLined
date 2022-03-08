@@ -88,7 +88,7 @@ export class SecondaryYAxis {
     public ToggleOn: boolean = false;
 
     public MinValue: number = 0;
-    public MaxValue: number = 500;
+    public MaxValue: number = 0;
 
     public DisplayUnits: string = 'auto';
 
@@ -118,6 +118,7 @@ export class DataLabelSettings {
     public BarLabelToggle: boolean = true;
     public BarLabelColor: string = '#000000';
     public BarLabelFontSize: number = 10;
+    public BarLabelDisplayTolerance: number = 15;
 }
 
 export class LegendSettings {

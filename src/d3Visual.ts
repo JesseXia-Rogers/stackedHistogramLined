@@ -6,7 +6,7 @@ import * as Interfaces from './interfaces';
 
 import * as d3 from 'd3';
 import powerbi from 'powerbi-visuals-api';
-import { LayoutSettings, VisualSettings } from './settings';
+import { VisualSettings } from './settings';
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import { group, local, stack } from 'd3';
 
@@ -60,7 +60,6 @@ export class D3Visual {
     public CreateVisualContainer() {
         // gets settings
         const LAYOUT_SETTINGS = this._settings.LayoutSettings;
-        // const AXIS_LABEL_SETTINGS = this._settings.AxisLabelSettings;
         const X_AXIS_SETTINGS = this._settings.XAxisSettings;
         const Y_AXIS_SETTINGS = this._settings.YAxisSettings;
         const DATA_LABEL_SETTINGS = this._settings.DataLabelSettings;
@@ -98,7 +97,7 @@ export class D3Visual {
         let svgSelector = document.createElement('div');
         svgSelector.setAttribute('class', 'svg-selector');
         svgSelector.style.height = this.container.offsetHeight + 'px';
-        this.container.appendChild(svgSelector)
+        this.container.appendChild(svgSelector);
 
         let svg = d3.select(svgSelector)
             .append('svg')
@@ -114,6 +113,7 @@ export class D3Visual {
         let height = svgSelector.offsetHeight - yPadding;
         let marginTop = 40;
 
+        // adjusts padding to add more space for legend
         if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
             height = this.dimension.height - yPadding;
             marginTop = 20;
@@ -141,21 +141,37 @@ export class D3Visual {
         // set x axis
         let xAxis = d3.axisBottom(x);
 
-        // set x axis g
+        // set x axis group
         let xAxisG = svg.append('g')
             .classed('x-axis-g', true);
 
         // create x axis attr call
         let setXAxisGAttr = g => {
-            g.selectAll('.domain').remove();
-            g.selectAll('line').remove();
-            g.selectAll('text')
-                .attr('transform', `rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
-                .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle')
+            g.selectAll('line').remove(); // removes gridlines
+
+            // font settings
+            g.selectAll('.x-axis-g text')
                 .style('fill', X_AXIS_SETTINGS.FontColor)
                 .style('font-family', X_AXIS_SETTINGS.FontFamily)
                 .style('font-size', X_AXIS_SETTINGS.FontSize);
+
+            // independent rotation for capacity
+            g.selectAll('.x-axis-g text')
+                .filter(x => x == 'Capacity')
+                .attr('transform', `rotate(-${X_AXIS_SETTINGS.CapacityLabelAngle})`)
+                .style('text-anchor', X_AXIS_SETTINGS.CapacityLabelAngle ? 'end' : 'middle');
+
+            // all other labels
+            g.selectAll('.x-axis-g text')
+                .filter(x => x != 'Capacity')
+                .attr('transform', `rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
+                .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle');
         }
+
+        // render x axis
+        xAxisG.attr('transform', `translate(0, ${height})`)
+            .call(xAxis)
+            .call(setXAxisGAttr);
 
         // set y axis value
         let y0 = d3.scaleLinear()
@@ -164,72 +180,71 @@ export class D3Visual {
 
         // set y axis
         let yAxis = d3.axisLeft(y0)
-            .tickSize(-width)
+            .tickSize(-width) // draws horizontal gridline across the chart
             .tickFormat(data => {
                 // formats y-axis labels with appropriate units
                 return nFormatter(parseInt(data.toString()), 3, Y_AXIS_SETTINGS.DisplayUnits);
             });
 
-        // set y axis g
+        // set y axis group
         let yAxisG = svg.append('g')
             .classed('y-axis-g', true);
 
         // create y axis attr call
         let setYAxisGAttr = _ => {
-            d3.selectAll('.domain').remove();
             d3.selectAll('line')
                 .attr('stroke-dasharray', '1,3')
                 .attr('stroke', 'grey')
                 .attr('stroke-width', +Y_AXIS_SETTINGS.ToggleGridLines)
                 .style('fill', Y_AXIS_SETTINGS.FontColor)
+            d3.selectAll('.y-axis-g text')
+                .style('fill', Y_AXIS_SETTINGS.FontColor)
                 .style('font-family', Y_AXIS_SETTINGS.FontFamily)
                 .style('font-size', Y_AXIS_SETTINGS.FontSize);
         }
 
+        // render y axis
+        yAxisG.call(yAxis.ticks(Y_AXIS_SETTINGS.TickCount))
+            .call(setYAxisGAttr);
+
         let minVal = SECONDARY_Y_AXIS.MinValue;
         let maxVal = SECONDARY_Y_AXIS.MaxValue;
 
+        // setting secondary y axis scale
         let y1 = d3.scaleLinear()
             .domain([minVal, maxVal])
             .range([height, 0]);
 
-
-        let secondaryYAxis = d3.axisRight(y1)
+        // set properties
+        let secYAxis = d3.axisRight(y1)
             .tickFormat(data => {
                 return nFormatter(parseInt(data.toString()), 3, SECONDARY_Y_AXIS.DisplayUnits);
             });
 
-        let secondaryYAxisG = svg.append('g')
-            .classed('y-axis-g', true)
+        // create group
+        let secYAxisG = svg.append('g')
+            .classed('sec-y-axis-g', true)
             .attr('transform', `translate(${width}, 0)`);
 
-        // render x axis
-        xAxisG.attr('transform', `translate(0, ${height})`)
-            .call(xAxis)
-            .call(setXAxisGAttr);
+        // style text
+        let setSecYAxisGAttr = _ => {
+            d3.selectAll('.sec-y-axis-g line')
+                .remove();
 
-        // render y axis
-        yAxisG.call(yAxis.ticks(Y_AXIS_SETTINGS.TickCount))
-            .call(setYAxisGAttr);
-        d3.select('line')
-            .filter((d, i) => i == 0)
-            .remove();
-        // d3.select('line')
-        //     .filter(function (d, i) {console.log(d, i); return i == 0})
-        //     .remove();
-        if (SECONDARY_Y_AXIS.ToggleOn) {
-            secondaryYAxisG.call(secondaryYAxis.ticks(SECONDARY_Y_AXIS.TickCount))
-                .call(setYAxisGAttr);
+            if (SECONDARY_Y_AXIS.ToggleOn) {
+                d3.selectAll('.sec-y-axis-g text')
+                    .style('fill', SECONDARY_Y_AXIS.FontColor)
+                    .style('font-family', SECONDARY_Y_AXIS.FontFamily)
+                    .style('font-size', SECONDARY_Y_AXIS.FontSize);
+            } else {
+                d3.selectAll('.sec-y-axis-g text')
+                    .style('fill', '#ffffff');
+            }
         }
 
-        // hide origin label
-        // values are mostly hard-coded in, not sure if there's a better way
-        svg.append('rect')
-            .attr('width', Y_AXIS_SETTINGS.FontSize)
-            .attr('height', Y_AXIS_SETTINGS.FontSize)
-            .attr('fill', '#ffffff')
-            .attr('y', height - 6)
-            .attr('x', -Y_AXIS_SETTINGS.FontSize);
+        // render secondary y axis
+        secYAxisG.call(secYAxis.ticks(SECONDARY_Y_AXIS.TickCount))
+            .call(setSecYAxisGAttr);
 
         // generate stack
         let serieStack = d3.stack().keys(dp.Series);
@@ -240,11 +255,15 @@ export class D3Visual {
         let legendRectHeight = 15;
         let legendHorizontalPadding = 30;
 
+        // creates group with class legend for each data element
         let legend = legendSvg.selectAll('.legend')
             .data(stackData)
             .enter()
             .append('g')
             .classed('legend', true);
+
+        // the following code will dynamically position each g element
+        // and then append the appropriate text label and color
 
         let legendWidth = 0;
 
@@ -257,8 +276,13 @@ export class D3Visual {
             // gets width
             let nameWidth = this.getTextWidth(serieName, LEGEND_SETTINGS);
 
-            // calculates legend width
-            legendWidth += nameWidth + legendHorizontalPadding;
+            if (LEGEND_SETTINGS.LegendPosition == 'left') {
+                // sets longest name as legend width
+                legendWidth = Math.max(nameWidth, legendWidth);
+            } else {
+                // sets sum of names as legend width
+                legendWidth += nameWidth + legendHorizontalPadding;
+            }
         });
 
         // checks if legend exceeds chart borders
@@ -272,7 +296,6 @@ export class D3Visual {
         // displays legend based on selected position
         // left: starting top left, display vertically
         if (LEGEND_SETTINGS.LegendPosition == 'left') {
-
             // places each legend label
             legend.attr('transform', (_, i) => {
 
@@ -331,6 +354,10 @@ export class D3Visual {
         if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
             legendColor.attr('y', legendSelector.offsetHeight - legendMargin - 10);
             legendText.attr('y', legendSelector.offsetHeight - legendMargin);
+
+        } else if (LEGEND_SETTINGS.LegendPosition == 'left') {
+            // adds margin for legend
+            svg.style('margin-left', `${legendWidth + 40}px`)
         }
 
         // hover info text
@@ -401,6 +428,24 @@ export class D3Visual {
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
 
+                // removes first label
+                d3.select('.y-axis-g > .tick')
+                    .filter((d, i) => i == 0)
+                    .remove();
+
+                // set secondary y axis
+                y1.domain([minVal, maxVal ? maxVal : localRange]);
+                secYAxisG.call(secYAxis)
+                    .call(setSecYAxisGAttr);
+
+                // removes 0 label
+                d3.select('.sec-y-axis-g > .tick')
+                    .filter(d => d == 0)
+                    .remove();
+
+                // removes border
+                d3.selectAll('.domain').remove();
+
                 // set bar positions & height
                 bar.data(serie)
                     // x pos is based off x-axis value + width of bars before
@@ -416,8 +461,16 @@ export class D3Visual {
                     barLabel.text(data => {
                         let val = data.data[dp.Series[idx]]; // gets data value
                         let barHeight = y0(data[0]) - y0(data[1]); // gets bar height
+                        let maxTextWidth = x.bandwidth() / dp.Series.length + DATA_LABEL_SETTINGS.BarLabelDisplayTolerance; // max allowable text width
 
-                        return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
+                        val = nFormatter(val.toString(), displayDigits, displayUnits);
+
+                        if (this.getTextWidth(val, DATA_LABEL_SETTINGS) > maxTextWidth ||
+                            barHeight <= DATA_LABEL_SETTINGS.BarLabelFontSize) {
+                            return null;
+                        }
+
+                        return val;
                     });
 
                     // sets x pos of label based on x-axis value + widths of bars before + 1/2 current bar width
@@ -432,6 +485,24 @@ export class D3Visual {
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
 
+                // removes 0 label
+                d3.select('.y-axis-g > .tick')
+                    .filter((d, i) => i == 0)
+                    .remove();
+
+                // set secondary y axis
+                y1.domain([minVal, maxVal ? maxVal : Math.ceil(dp.DataNumeric.max * 1.2)]);
+                secYAxisG.call(secYAxis)
+                    .call(setSecYAxisGAttr);
+
+                // removes 0 label
+                d3.select('.sec-y-axis-g > .tick')
+                    .filter((d, i) => i == 0)
+                    .remove();
+
+                // removes border
+                d3.selectAll('.domain').remove();
+
                 // set bar heights
                 bar.data(serie)
                     .attr('y', data => y0(data[1]))
@@ -440,10 +511,18 @@ export class D3Visual {
                 // show text if bar height allows
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
                     barLabel.text(data => {
-                        let barHeight = y0(data[0]) - y0(data[1]);
-                        let val = data.data[dp.Series[idx]];
+                        let barHeight = y0(data[0]) - y0(data[1]); // get bar height
+                        let val = data.data[dp.Series[idx]]; // get data value
+                        let maxTextWidth = x.bandwidth() + DATA_LABEL_SETTINGS.BarLabelDisplayTolerance; // max allowable text width
 
-                        return barHeight > DATA_LABEL_SETTINGS.BarLabelFontSize ? nFormatter(val.toString(), displayDigits, displayUnits) : null;
+                        val = nFormatter(val.toString(), displayDigits, displayUnits);
+
+                        if (this.getTextWidth(val, DATA_LABEL_SETTINGS) > maxTextWidth ||
+                            barHeight <= DATA_LABEL_SETTINGS.BarLabelFontSize) {
+                            return null;
+                        }
+
+                        return val;
                     });
 
                     // bar label y pos based on upper data value - 1/2 height of bar
@@ -547,7 +626,6 @@ export class D3Visual {
         // threshold
         if (THRESHOLD_SETTINGS.ThresholdToggle) {
             let thresholdValue: number = dp.LineValues.reduce((a, b) => a + b, 0);
-
             svg.selectAll('.lineValues')
                 .data([dp.LineValues[0]])
                 .enter()
@@ -584,10 +662,9 @@ export class D3Visual {
 
                     // display value if bar width allows
                     if (x.bandwidth() > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
-
-                        // background
                         let sumBgWidth = x.bandwidth();
 
+                        // background
                         svg.append('rect')
                             .attr('width', sumBgWidth)
                             .attr('height', 20)

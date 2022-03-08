@@ -64,6 +64,7 @@ export declare class DataLabelSettings {
     BarLabelToggle: boolean;
     BarLabelColor: string;
     BarLabelFontSize: number;
+    BarLabelDisplayTolerance: number;
 }
 export declare class LegendSettings {
     LegendPosition: string;

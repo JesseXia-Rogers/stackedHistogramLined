@@ -457,6 +457,12 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "BarLabelDisplayTolerance": {
+                    "displayName": "Bar Label Display Tolerance",
+                    "type": {
+                        "numeric": true
+                    }
                 }
             }
         },

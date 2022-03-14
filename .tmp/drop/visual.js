@@ -45,6 +45,7 @@ class D3Visual {
     CreateVisualContainer() {
         // gets settings
         const LAYOUT_SETTINGS = this._settings.LayoutSettings;
+        const CAPACITY_SETTINGS = this._settings.CapacitySettings;
         const X_AXIS_SETTINGS = this._settings.XAxisSettings;
         const Y_AXIS_SETTINGS = this._settings.YAxisSettings;
         const DATA_LABEL_SETTINGS = this._settings.DataLabelSettings;
@@ -101,7 +102,7 @@ class D3Visual {
         // removes capacity if 0 or toggled off
         // capacity is assumed to always be the first column
         let hasCapacity = true;
-        if (!X_AXIS_SETTINGS.CapacityToggle || !this.getSum(0)) {
+        if (!CAPACITY_SETTINGS.CapacityToggle || !this.getSum(0)) {
             hasCapacity = false;
             _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .D3Data.shift */ .$m.shift();
         }
@@ -126,17 +127,16 @@ class D3Visual {
             // independent rotation for capacity
             g.selectAll('.x-axis-g text')
                 .filter(x => x == 'Capacity')
-                .attr('transform', `rotate(-${X_AXIS_SETTINGS.CapacityLabelAngle})`)
-                .style('text-anchor', X_AXIS_SETTINGS.CapacityLabelAngle ? 'end' : 'middle');
+                .attr('transform', `translate(${CAPACITY_SETTINGS.XOffset}, ${-CAPACITY_SETTINGS.YOffset + height}) rotate(-${CAPACITY_SETTINGS.LabelAngle})`)
+                .style('text-anchor', CAPACITY_SETTINGS.LabelAngle ? 'end' : 'middle');
             // all other labels
             g.selectAll('.x-axis-g text')
                 .filter(x => x != 'Capacity')
-                .attr('transform', `rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
+                .attr('transform', `translate(${X_AXIS_SETTINGS.XOffset}, ${-X_AXIS_SETTINGS.YOffset + height}) rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
                 .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle');
         };
         // render x axis
-        xAxisG.attr('transform', `translate(0, ${height})`)
-            .call(xAxis)
+        xAxisG.call(xAxis)
             .call(setXAxisGAttr);
         // set y axis value
         let y0 = d3__WEBPACK_IMPORTED_MODULE_0__/* .scaleLinear */ .BYU()
@@ -633,14 +633,18 @@ class D3Visual {
                         let months = _interfaces__WEBPACK_IMPORTED_MODULE_2__/* .MonthNames */ .y;
                         // if 12-month prev == 0 find next closest available non-zero month, starting from 12-month prev and incrementing
                         primGrowth1Index = primGrowth2Index - 12 < 0 ? 0 : primGrowth2Index - 12;
+                        // gets shortened month ex Jan
                         let month = _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns */ .oe[primGrowth2Index].slice(0, 3);
+                        // gets shortened year ex 21
                         let year = parseInt(_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns */ .oe[primGrowth2Index].slice(4));
+                        // decrements year
                         year--;
+                        // sets column name
+                        let col = month + '-' + year.toString();
+                        // finds 13 month range
                         for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
-                            let col = month + '-' + year.toString();
                             if (_dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns */ .oe[primGrowth1Index] != col || !this.getSum(primGrowth1Index)) {
                                 primGrowth1Index++;
-                                // console.log(dp.Columns[primGrowth1Index])
                             }
                         }
                         while (primGrowth1Index < _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns.length */ .oe.length) {
@@ -650,6 +654,7 @@ class D3Visual {
                                 break;
                             primGrowth1Index++;
                         }
+                        // sets selector
                         primarySelect1 = _dataProcess__WEBPACK_IMPORTED_MODULE_1__/* .Columns */ .oe[primGrowth1Index];
                     }
                 }
@@ -1285,7 +1290,7 @@ let MonthNames = ["January", "February", "March", "April", "May", "June", "July"
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Jx": () => (/* binding */ VisualSettings)
 /* harmony export */ });
-/* unused harmony exports LayoutSettings, XAxisSettings, YAxisSettings, SecondaryYAxis, DataColors, DataLabelSettings, LegendSettings, ThresholdSettings, PrimaryGrowthSettings, SecondaryGrowthSettings, PrimaryLabelSettings, PrimaryLineSettings, SecondaryLabelSettings, SecondaryLineSettings */
+/* unused harmony exports LayoutSettings, CapacitySettings, XAxisSettings, YAxisSettings, SecondaryYAxis, DataColors, DataLabelSettings, LegendSettings, ThresholdSettings, PrimaryGrowthSettings, SecondaryGrowthSettings, PrimaryLabelSettings, PrimaryLineSettings, SecondaryLabelSettings, SecondaryLineSettings */
 /* harmony import */ var powerbi_visuals_utils_dataviewutils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24554);
 /*
  *  Power BI Visualizations
@@ -1318,8 +1323,7 @@ var DataViewObjectsParser = powerbi_visuals_utils_dataviewutils__WEBPACK_IMPORTE
 class VisualSettings extends DataViewObjectsParser {
     constructor() {
         super(...arguments);
-        // public AxisSettings: AxisSettings = new AxisSettings();
-        // public AxisLabelSettings: AxisLabelSettings = new AxisLabelSettings();
+        this.CapacitySettings = new CapacitySettings();
         this.XAxisSettings = new XAxisSettings();
         this.YAxisSettings = new YAxisSettings();
         this.DataLabelSettings = new DataLabelSettings();
@@ -1345,14 +1349,22 @@ class LayoutSettings {
         this.XAxisBarWhiteSpace = 0.3;
     }
 }
-class XAxisSettings {
+class CapacitySettings {
     constructor() {
         this.CapacityToggle = true;
+        this.LabelAngle = 0;
+        this.XOffset = 0;
+        this.YOffset = 0;
+    }
+}
+class XAxisSettings {
+    constructor() {
         this.FontFamily = 'Calibri';
         this.FontColor = '#000000';
         this.FontSize = 11;
         this.AxisLabelAngle = 0;
-        this.CapacityLabelAngle = 0;
+        this.XOffset = 0;
+        this.YOffset = 0;
     }
 }
 class YAxisSettings {

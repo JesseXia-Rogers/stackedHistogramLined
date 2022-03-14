@@ -122,8 +122,8 @@
                 }
             }
         },
-        "XAxisSettings": {
-            "displayName": "X-Axis",
+        "CapacitySettings": {
+            "displayName": "Capacity",
             "properties": {
                 "CapacityToggle": {
                     "displayName": "Show Capacity",
@@ -131,6 +131,29 @@
                         "bool": true
                     }
                 },
+                "AxisLabelAngle": {
+                    "displayName": "Label Rotation",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "XOffset": {
+                    "displayName": "Label X Offset",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "YOffset": {
+                    "displayName": "Label Y Offset",
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "XAxisSettings": {
+            "displayName": "X-Axis",
+            "properties": {
                 "FontFamily": {
                     "displayName": "Font Family",
                     "type": {
@@ -161,8 +184,14 @@
                         "numeric": true
                     }
                 },
-                "CapacityLabelAngle": {
-                    "displayName": "Capacity Label Rotation",
+                "XOffset": {
+                    "displayName": "Label X Offset",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "YOffset": {
+                    "displayName": "Label Y Offset",
                     "type": {
                         "numeric": true
                     }
@@ -645,7 +674,7 @@
                     }
                 },
                 "ToggleBgShape": {
-                    "displayName": "Show Background Shape",
+                    "displayName": "Toggle Background Shape",
                     "type": {
                         "bool": true
                     }
@@ -825,7 +854,7 @@
                     }
                 },
                 "ToggleBgShape": {
-                    "displayName": "Show Background Shape",
+                    "displayName": "Toggle Background Shape",
                     "type": {
                         "bool": true
                     }

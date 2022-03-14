@@ -1,6 +1,7 @@
 import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 export declare class VisualSettings extends DataViewObjectsParser {
+    CapacitySettings: CapacitySettings;
     XAxisSettings: XAxisSettings;
     YAxisSettings: YAxisSettings;
     DataLabelSettings: DataLabelSettings;
@@ -22,13 +23,19 @@ export declare class LayoutSettings {
     ChartYMargin: number;
     XAxisBarWhiteSpace: number;
 }
-export declare class XAxisSettings {
+export declare class CapacitySettings {
     CapacityToggle: boolean;
+    LabelAngle: number;
+    XOffset: number;
+    YOffset: number;
+}
+export declare class XAxisSettings {
     FontFamily: string;
     FontColor: string;
     FontSize: number;
     AxisLabelAngle: number;
-    CapacityLabelAngle: number;
+    XOffset: number;
+    YOffset: number;
 }
 export declare class YAxisSettings {
     DisplayUnits: string;

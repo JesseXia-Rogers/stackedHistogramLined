@@ -60,6 +60,7 @@ export class D3Visual {
     public CreateVisualContainer() {
         // gets settings
         const LAYOUT_SETTINGS = this._settings.LayoutSettings;
+        const CAPACITY_SETTINGS = this._settings.CapacitySettings;
         const X_AXIS_SETTINGS = this._settings.XAxisSettings;
         const Y_AXIS_SETTINGS = this._settings.YAxisSettings;
         const DATA_LABEL_SETTINGS = this._settings.DataLabelSettings;
@@ -127,7 +128,7 @@ export class D3Visual {
         // removes capacity if 0 or toggled off
         // capacity is assumed to always be the first column
         let hasCapacity = true;
-        if (!X_AXIS_SETTINGS.CapacityToggle || !this.getSum(0)) {
+        if (!CAPACITY_SETTINGS.CapacityToggle || !this.getSum(0)) {
             hasCapacity = false;
             dp.D3Data.shift();
         }
@@ -158,19 +159,18 @@ export class D3Visual {
             // independent rotation for capacity
             g.selectAll('.x-axis-g text')
                 .filter(x => x == 'Capacity')
-                .attr('transform', `rotate(-${X_AXIS_SETTINGS.CapacityLabelAngle})`)
-                .style('text-anchor', X_AXIS_SETTINGS.CapacityLabelAngle ? 'end' : 'middle');
+                .attr('transform', `translate(${CAPACITY_SETTINGS.XOffset}, ${-CAPACITY_SETTINGS.YOffset + height}) rotate(-${CAPACITY_SETTINGS.LabelAngle})`)
+                .style('text-anchor', CAPACITY_SETTINGS.LabelAngle ? 'end' : 'middle');
 
             // all other labels
             g.selectAll('.x-axis-g text')
                 .filter(x => x != 'Capacity')
-                .attr('transform', `rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
+                .attr('transform', `translate(${X_AXIS_SETTINGS.XOffset}, ${-X_AXIS_SETTINGS.YOffset + height}) rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
                 .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle');
         }
 
         // render x axis
-        xAxisG.attr('transform', `translate(0, ${height})`)
-            .call(xAxis)
+        xAxisG.call(xAxis)
             .call(setXAxisGAttr);
 
         // set y axis value
@@ -762,16 +762,21 @@ export class D3Visual {
                         // if 12-month prev == 0 find next closest available non-zero month, starting from 12-month prev and incrementing
                         primGrowth1Index = primGrowth2Index - 12 < 0 ? 0 : primGrowth2Index - 12;
 
+                        // gets shortened month ex Jan
                         let month = dp.Columns[primGrowth2Index].slice(0, 3);
+                        // gets shortened year ex 21
                         let year = parseInt(dp.Columns[primGrowth2Index].slice(4));
 
+                        // decrements year
                         year--;
 
+                        // sets column name
+                        let col = month + '-' + year.toString();
+
+                        // finds 13 month range
                         for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
-                            let col = month + '-' + year.toString();
                             if (dp.Columns[primGrowth1Index] != col || !this.getSum(primGrowth1Index)) {
                                 primGrowth1Index++;
-                                // console.log(dp.Columns[primGrowth1Index])
                             }
                         }
 
@@ -783,6 +788,7 @@ export class D3Visual {
 
                             primGrowth1Index++;
                         }
+                        // sets selector
                         primarySelect1 = dp.Columns[primGrowth1Index];
                     }
                 }

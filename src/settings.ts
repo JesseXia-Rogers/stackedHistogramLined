@@ -30,8 +30,7 @@ import { dataViewObjectsParser } from "powerbi-visuals-utils-dataviewutils";
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
 export class VisualSettings extends DataViewObjectsParser {
-    // public AxisSettings: AxisSettings = new AxisSettings();
-    // public AxisLabelSettings: AxisLabelSettings = new AxisLabelSettings();
+    public CapacitySettings: CapacitySettings = new CapacitySettings();
     public XAxisSettings: XAxisSettings = new XAxisSettings();
     public YAxisSettings: YAxisSettings = new YAxisSettings();
     public DataLabelSettings: DataLabelSettings = new DataLabelSettings();
@@ -59,15 +58,24 @@ export class LayoutSettings {
     public XAxisBarWhiteSpace: number = 0.3;
 }
 
-export class XAxisSettings {
+export class CapacitySettings {
     public CapacityToggle: boolean = true;
 
+    public LabelAngle: number = 0;
+
+    public XOffset: number = 0;
+    public YOffset: number = 0;
+}
+
+export class XAxisSettings {
     public FontFamily: string = 'Calibri';
     public FontColor: string = '#000000';
     public FontSize: number = 11;
 
     public AxisLabelAngle: number = 0;
-    public CapacityLabelAngle: number = 0;
+
+    public XOffset: number = 0;
+    public YOffset: number = 0;
 }
 
 export class YAxisSettings {
@@ -93,7 +101,7 @@ export class SecondaryYAxis {
     public DisplayUnits: string = 'auto';
 
     public TickCount: number = 3;
-    
+
     public FontFamily: string = 'Calibri';
     public FontColor: string = '#000000';
     public FontSize: number = 11;

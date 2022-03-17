@@ -115,7 +115,7 @@ export class D3Visual {
         let marginTop = 40;
 
         // adjusts padding to add more space for legend
-        if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
+        if (LEGEND_SETTINGS.LegendPosition == 'bottom' && LEGEND_SETTINGS.LegendToggle) {
             height = this.dimension.height - yPadding;
             marginTop = 20;
         }
@@ -251,113 +251,115 @@ export class D3Visual {
         let stackData = serieStack(dp.D3Data);
         // console.log(stackData)
 
-        // create legend
-        let legendRectHeight = 15;
-        let legendHorizontalPadding = 30;
-
-        // creates group with class legend for each data element
-        let legend = legendSvg.selectAll('.legend')
-            .data(stackData)
-            .enter()
-            .append('g')
-            .classed('legend', true);
-
-        // the following code will dynamically position each g element
-        // and then append the appropriate text label and color
-
-        let legendWidth = 0;
-
         // true width gets actual width of chart 
         // useful for secondary growth indicator and legend
         let trueWidth = width + xPadding;
 
-        // calculates text width for each name based on font size and family
-        dp.Series.forEach(serieName => {
-            // gets width
-            let nameWidth = this.getTextWidth(serieName, LEGEND_SETTINGS);
+        // create legend
+        if (LEGEND_SETTINGS.LegendToggle) {
+            let legendRectHeight = 15;
+            let legendHorizontalPadding = 30;
 
-            if (LEGEND_SETTINGS.LegendPosition == 'left') {
-                // sets longest name as legend width
-                legendWidth = Math.max(nameWidth, legendWidth);
-            } else {
-                // sets sum of names as legend width
-                legendWidth += nameWidth + legendHorizontalPadding;
-            }
-        });
+            // creates group with class legend for each data element
+            let legend = legendSvg.selectAll('.legend')
+                .data(stackData)
+                .enter()
+                .append('g')
+                .classed('legend', true);
 
-        // checks if legend exceeds chart borders
-        legendWidth = legendWidth > trueWidth ? trueWidth : legendWidth;
+            // the following code will dynamically position each g element
+            // and then append the appropriate text label and color
 
-        // currwidth determines current horizontal position of legend labels
-        let currWidth = 0;
-        // row for legend wrapping, determines what row to place label on
-        let row = 0;
+            let legendWidth = 0;
 
-        // displays legend based on selected position
-        // left: starting top left, display vertically
-        if (LEGEND_SETTINGS.LegendPosition == 'left') {
-            // places each legend label
-            legend.attr('transform', (_, i) => {
+            // calculates text width for each name based on font size and family
+            dp.Series.forEach(serieName => {
+                // gets width
+                let nameWidth = this.getTextWidth(serieName, LEGEND_SETTINGS);
 
-                // displays each label below previous label
-                let n = dp.Series.length;
-                return 'translate(0,' + (i % n * legendRectHeight) + ')';
-            });
-
-        } else {
-            // bottom: display at bottom center of chart
-            if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
-                // centers legend
-                let centerOffset = (trueWidth - legendWidth) / 2;
-                currWidth = centerOffset;
-            }
-
-            // top: starting top left, display horizontally
-            // places each legend label
-            legend.attr('transform', serie => {
-                let nameWidth = this.getTextWidth(serie.key, LEGEND_SETTINGS);
-
-                // allows legend wrapping
-                if (currWidth + nameWidth + legendHorizontalPadding > trueWidth) {
-                    // increments row if legend exceeds chart borders
-                    row++;
-                    // resets width
-                    currWidth = 0;
+                if (LEGEND_SETTINGS.LegendPosition == 'left') {
+                    // sets longest name as legend width
+                    legendWidth = Math.max(nameWidth, legendWidth);
+                } else {
+                    // sets sum of names as legend width
+                    legendWidth += nameWidth + legendHorizontalPadding;
                 }
-                // displays each label at current width, height is determined using the row
-                let t = 'translate(' + currWidth + ',' + row * legendRectHeight + ')';
-
-                // increments width
-                currWidth += nameWidth + legendHorizontalPadding;
-                return t;
             });
-        }
 
-        // adds squares for serie colours
-        let legendColor = legend.append('rect')
-            .attr('width', 10)
-            .attr('height', 10)
-            .attr('y', 0)
-            .attr('fill', d => this._dataPointSeries[d.index].seriesColor);
+            // checks if legend exceeds chart borders
+            legendWidth = legendWidth > trueWidth ? trueWidth : legendWidth;
 
-        // adds legend text
-        let legendText = legend.append('text')
-            .attr('x', 15)
-            .attr('y', 10)
-            .style('fill', LEGEND_SETTINGS.FontColor)
-            .style('font-family', LEGEND_SETTINGS.FontFamily)
-            .style('font-size', LEGEND_SETTINGS.FontSize)
-            .text(d => d.key);
+            // currwidth determines current horizontal position of legend labels
+            let currWidth = 0;
+            // row for legend wrapping, determines what row to place label on
+            let row = 0;
 
-        // places legend at bottom of chart
-        let legendMargin = LEGEND_SETTINGS.LegendMargin;
-        if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
-            legendColor.attr('y', legendSelector.offsetHeight - legendMargin - 10);
-            legendText.attr('y', legendSelector.offsetHeight - legendMargin);
+            // displays legend based on selected position
+            // left: starting top left, display vertically
+            if (LEGEND_SETTINGS.LegendPosition == 'left') {
+                // places each legend label
+                legend.attr('transform', (_, i) => {
 
-        } else if (LEGEND_SETTINGS.LegendPosition == 'left') {
-            // adds margin for legend
-            svg.style('margin-left', `${legendWidth + 40}px`)
+                    // displays each label below previous label
+                    let n = dp.Series.length;
+                    return 'translate(0,' + (i % n * legendRectHeight) + ')';
+                });
+
+            } else {
+                // bottom: display at bottom center of chart
+                if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
+                    // centers legend
+                    let centerOffset = (trueWidth - legendWidth) / 2;
+                    currWidth = centerOffset;
+                }
+
+                // top: starting top left, display horizontally
+                // places each legend label
+                legend.attr('transform', serie => {
+                    let nameWidth = this.getTextWidth(serie.key, LEGEND_SETTINGS);
+
+                    // allows legend wrapping
+                    if (currWidth + nameWidth + legendHorizontalPadding > trueWidth) {
+                        // increments row if legend exceeds chart borders
+                        row++;
+                        // resets width
+                        currWidth = 0;
+                    }
+                    // displays each label at current width, height is determined using the row
+                    let t = 'translate(' + currWidth + ',' + row * legendRectHeight + ')';
+
+                    // increments width
+                    currWidth += nameWidth + legendHorizontalPadding;
+                    return t;
+                });
+            }
+
+            // adds squares for serie colours
+            let legendColor = legend.append('rect')
+                .attr('width', 10)
+                .attr('height', 10)
+                .attr('y', 0)
+                .attr('fill', d => this._dataPointSeries[d.index].seriesColor);
+
+            // adds legend text
+            let legendText = legend.append('text')
+                .attr('x', 15)
+                .attr('y', 10)
+                .style('fill', LEGEND_SETTINGS.FontColor)
+                .style('font-family', LEGEND_SETTINGS.FontFamily)
+                .style('font-size', LEGEND_SETTINGS.FontSize)
+                .text(d => d.key);
+
+            // places legend at bottom of chart
+            let legendMargin = LEGEND_SETTINGS.LegendMargin;
+            if (LEGEND_SETTINGS.LegendPosition == 'bottom') {
+                legendColor.attr('y', legendSelector.offsetHeight - legendMargin - 10);
+                legendText.attr('y', legendSelector.offsetHeight - legendMargin);
+
+            } else if (LEGEND_SETTINGS.LegendPosition == 'left') {
+                // adds margin for legend
+                svg.style('margin-left', `${legendWidth + 40}px`)
+            }
         }
 
         // hover info text
@@ -480,8 +482,10 @@ export class D3Visual {
             }
             // draws bars and bar labels for stacked chart
             else {
+                let scaleFactor = 1.5;
+
                 // sets max/min for primary y axis
-                y0.domain([0, yMax ? yMax : Math.ceil(dp.DataNumeric.max * 1.2)]);
+                y0.domain([0, yMax ? yMax : Math.ceil(dp.DataNumeric.max * scaleFactor)]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
 
@@ -491,7 +495,7 @@ export class D3Visual {
                     .remove();
 
                 // set secondary y axis
-                y1.domain([minVal, maxVal ? maxVal : Math.ceil(dp.DataNumeric.max * 1.2)]);
+                y1.domain([minVal, maxVal ? maxVal : Math.ceil(dp.DataNumeric.max * scaleFactor)]);
                 secYAxisG.call(secYAxis)
                     .call(setSecYAxisGAttr);
 
@@ -635,9 +639,21 @@ export class D3Visual {
                 .attr('stroke', THRESHOLD_SETTINGS.LineColor)
                 .attr('stroke-width', THRESHOLD_SETTINGS.LineThickness)
                 .attr('x1', 0)
-                .attr('y1', y1(thresholdValue))
                 .attr('x2', width)
-                .attr('y2', y1(thresholdValue));
+
+            // sets axis to align to
+            if (THRESHOLD_SETTINGS.ThresholdAlign) {
+                // align secondary y-axis
+                svg.selectAll('.lineValues')
+                    .attr('y1', y1(thresholdValue))
+                    .attr('y2', y1(thresholdValue));
+
+            } else {
+                // align primary y-axis
+                svg.selectAll('.lineValues')
+                    .attr('y1', y0(thresholdValue))
+                    .attr('y2', y0(thresholdValue));
+            }
 
             // sets line type
             if (THRESHOLD_SETTINGS.LineType == 'dashed') {
@@ -661,16 +677,18 @@ export class D3Visual {
                     let text = nFormatter(maxVal, displayDigits, displayUnits);
 
                     // display value if bar width allows
-                    if (x.bandwidth() > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
+                    if (x.bandwidth() + DATA_LABEL_SETTINGS.SumLabelDisplayTolerance > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
                         let sumBgWidth = x.bandwidth();
 
-                        // background
-                        svg.append('rect')
-                            .attr('width', sumBgWidth)
-                            .attr('height', 20)
-                            .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
-                            .attr('y', y0(maxVal) - 20)
-                            .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
+                        if (DATA_LABEL_SETTINGS.SumLabelBgToggle) {
+                            // background
+                            svg.append('rect')
+                                .attr('width', sumBgWidth)
+                                .attr('height', 20)
+                                .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
+                                .attr('y', y0(maxVal) - 20)
+                                .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
+                        }
 
                         // text
                         svg.append('text')
@@ -825,7 +843,7 @@ export class D3Visual {
                     let averageX = (growth1X + growth2X) / 2;
 
                     // calculate label text
-                    let growthValue = primGrowth1Index ? primGrowth1Sum / primGrowth2Sum : primGrowth2Sum / primGrowth1Sum;
+                    let growthValue = hasCapacity ? primGrowth2Sum / primGrowth1Sum : primGrowth1Sum / primGrowth2Sum;
                     growthValue = (1 - growthValue) * 100;
 
                     let growthValueRounded = Math.round(growthValue * 10) / 10 + '%';

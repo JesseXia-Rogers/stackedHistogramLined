@@ -69,8 +69,8 @@ export class CapacitySettings {
 
 export class XAxisSettings {
     public FontFamily: string = 'Calibri';
-    public FontColor: string = '#000000';
-    public FontSize: number = 11;
+    public FontColor: string = '#666666';
+    public FontSize: number = 10;
 
     public AxisLabelAngle: number = 0;
 
@@ -87,8 +87,8 @@ export class YAxisSettings {
     public ToggleGridLines: boolean = true;
 
     public FontFamily: string = 'Calibri';
-    public FontColor: string = '#000000';
-    public FontSize: number = 11;
+    public FontColor: string = '#666666';
+    public FontSize: number = 10;
 
 }
 
@@ -118,10 +118,12 @@ export class DataLabelSettings {
 
     public FontFamily: string = 'Calibri';
 
-    public SumLabelToggle: boolean = true;
-    public SumLabelColor: string = '#000000';
     public SumLabelFontSize: number = 10;
+    public SumLabelColor: string = '#000000';
     public SumLabelBackgroundColor: string = '#ffffff';
+    public SumLabelDisplayTolerance: number = 10;
+    public SumLabelToggle: boolean = true;
+    public SumLabelBgToggle: boolean = true;
 
     public BarLabelToggle: boolean = true;
     public BarLabelColor: string = '#000000';
@@ -130,8 +132,8 @@ export class DataLabelSettings {
 }
 
 export class LegendSettings {
+    public LegendToggle: boolean = true;
     public LegendPosition: string = 'top';
-
     public LegendMargin: number = 0;
 
     public FontColor: string = '#000000';
@@ -141,6 +143,7 @@ export class LegendSettings {
 
 export class ThresholdSettings {
     public ThresholdToggle: boolean = true;
+    public ThresholdAlign: boolean = false;
     public LineThickness: number = 1;
     public LineColor: string = '#FF0000';
     public LineType: string = 'dashed';

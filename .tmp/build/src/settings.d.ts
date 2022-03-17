@@ -64,16 +64,19 @@ export declare class DataLabelSettings {
     DisplayUnits: string;
     DisplayDigits: number;
     FontFamily: string;
-    SumLabelToggle: boolean;
-    SumLabelColor: string;
     SumLabelFontSize: number;
+    SumLabelColor: string;
     SumLabelBackgroundColor: string;
+    SumLabelDisplayTolerance: number;
+    SumLabelToggle: boolean;
+    SumLabelBgToggle: boolean;
     BarLabelToggle: boolean;
     BarLabelColor: string;
     BarLabelFontSize: number;
     BarLabelDisplayTolerance: number;
 }
 export declare class LegendSettings {
+    LegendToggle: boolean;
     LegendPosition: string;
     LegendMargin: number;
     FontColor: string;
@@ -82,6 +85,7 @@ export declare class LegendSettings {
 }
 export declare class ThresholdSettings {
     ThresholdToggle: boolean;
+    ThresholdAlign: boolean;
     LineThickness: number;
     LineColor: string;
     LineType: string;

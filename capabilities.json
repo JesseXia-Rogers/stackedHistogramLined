@@ -185,13 +185,13 @@
                     }
                 },
                 "XOffset": {
-                    "displayName": "Label X Offset",
+                    "displayName": "Label X-Offset",
                     "type": {
                         "numeric": true
                     }
                 },
                 "YOffset": {
-                    "displayName": "Label Y Offset",
+                    "displayName": "Label Y-Offset",
                     "type": {
                         "numeric": true
                     }
@@ -280,7 +280,7 @@
             "displayName": "Secondary Y-Axis",
             "properties": {
                 "ToggleOn": {
-                    "displayName": "Show Secondary Y-Axis",
+                    "displayName": "Show Axis Labels",
                     "type": {
                         "bool": true
                     }
@@ -492,12 +492,30 @@
                     "type": {
                         "numeric": true
                     }
+                },
+                "SumLabelBgToggle": {
+                    "displayName": "Show Sum Label Background",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "SumLabelDisplayTolerance": {
+                    "displayName": "Sum Label Display Tolerance",
+                    "type": {
+                        "numeric": true
+                    }
                 }
             }
         },
         "LegendSettings": {
             "displayName": "Legend",
             "properties": {
+                "LegendToggle": {
+                    "displayName": "Show Legend",
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "LegendPosition": {
                     "displayName": "Legend Position",
                     "type": {
@@ -518,7 +536,7 @@
                     }
                 },
                 "LegendMargin": {
-                    "displayName": "Legend Y Position",
+                    "displayName": "Legend Y-Offset",
                     "type": {
                         "numeric": true
                     }
@@ -554,6 +572,12 @@
             "properties": {
                 "ThresholdToggle": {
                     "displayName": "Show Threshold",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "ThresholdAlign": {
+                    "displayName": "Align to Secondary Y-Axis",
                     "type": {
                         "bool": true
                     }

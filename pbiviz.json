@@ -4,7 +4,7 @@
         "displayName": "StackedHistogramLined",
         "guid": "stackedHistogramLined26F8DE7BF82D4BE7B654B878A184D90E",
         "visualClassName": "Visual",
-        "version": "2.0.3",
+        "version": "2.0.5",
         "description": "Multipurpose column chart for Rogers growth",
         "supportUrl": "https://github.com/Benoolean/stackedHistogramLined",
         "gitHubUrl": "https://github.com/JesseXia-Rogers/stackedHistogramLined"

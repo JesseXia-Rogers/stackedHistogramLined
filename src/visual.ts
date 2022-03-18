@@ -18,13 +18,10 @@ import DataViewValueColumnGroup = powerbi.DataViewValueColumnGroup;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import colorPalette = powerbi.extensibility.ISandboxExtendedColorPalette;
 
-
 import * as dp from './dataProcess';
 import * as d3 from 'd3';
 import { D3Visual } from './d3Visual';
 import * as Interfaces from './interfaces';
-import { Primitive } from 'd3-array';
-import { svg } from 'd3';
 
 type Selection<T extends d3.BaseType> = d3.Selection<T, any, any, any>;
 

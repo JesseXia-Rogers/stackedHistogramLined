@@ -703,6 +703,12 @@
                         "bool": true
                     }
                 },
+                "ShowSign": {
+                    "displayName": "Show +/- Sign",
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "LabelHeight": {
                     "displayName": "Label Height",
                     "type": {
@@ -754,10 +760,27 @@
                         "numeric": true
                     }
                 },
-                "ArrowToggle": {
-                    "displayName": "Show Arrow",
+                "DisplayArrow": {
+                    "displayName": "Display Arrows",
                     "type": {
-                        "bool": true
+                        "enumeration": [
+                            {
+                                "value": "none",
+                                "displayName": "Neither"
+                            },
+                            {
+                                "value": "both",
+                                "displayName": "Both"
+                            },
+                            {
+                                "value": "right",
+                                "displayName": "Right arrow only"
+                            },
+                            {
+                                "value": "left",
+                                "displayName": "Left arrow only"
+                            }
+                        ]
                     }
                 }
             }
@@ -783,7 +806,7 @@
                         "text": true
                     }
                 },
-                "SelectorsList": {
+                "GroupSelectors": {
                     "displayName": "Bar Group Selector(s)",
                     "type": {
                         "text": true
@@ -925,10 +948,27 @@
                         "numeric": true
                     }
                 },
-                "ArrowToggle": {
-                    "displayName": "Show Arrow",
+                "DisplayArrow": {
+                    "displayName": "Display Arrows",
                     "type": {
-                        "bool": true
+                        "enumeration": [
+                            {
+                                "value": "none",
+                                "displayName": "Neither"
+                            },
+                            {
+                                "value": "both",
+                                "displayName": "Both"
+                            },
+                            {
+                                "value": "right",
+                                "displayName": "Right arrow only"
+                            },
+                            {
+                                "value": "left",
+                                "displayName": "Left arrow only"
+                            }
+                        ]
                     }
                 }
             }

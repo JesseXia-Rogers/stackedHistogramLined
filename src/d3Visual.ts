@@ -1,14 +1,12 @@
 'use strict'
 
 import * as dp from './dataProcess';
-import * as Html from './html';
 import * as Interfaces from './interfaces';
 
 import * as d3 from 'd3';
 import powerbi from 'powerbi-visuals-api';
-import { VisualSettings } from './settings';
+import { DataLabelSettings, VisualSettings } from './settings';
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
-import { group, local, stack } from 'd3';
 
 // type
 type Selection<T extends d3.BaseType> = d3.Selection<T, any, any, any>;
@@ -420,7 +418,7 @@ export class D3Visual {
 
             let yMax = Y_AXIS_SETTINGS.YMaxValue;
 
-            // draws bars & bar labels for clustered chart
+            // draws bars & labels for clustered chart
             if (LAYOUT_SETTINGS.ChartType == 'clustered') {
                 // find local max
                 let localRange = this.getRange().max;
@@ -461,11 +459,16 @@ export class D3Visual {
                 // show text if bar height allows and bar labels are toggled on
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
                     barLabel.text(data => {
-                        let val = data.data[dp.Series[idx]]; // gets data value
-                        let barHeight = y0(data[0]) - y0(data[1]); // gets bar height
-                        let maxTextWidth = x.bandwidth() / dp.Series.length + DATA_LABEL_SETTINGS.BarLabelDisplayTolerance; // max allowable text width
+                        // gets data value
+                        let val = data.data[dp.Series[idx]];
 
-                        val = nFormatter(val.toString(), displayDigits, displayUnits);
+                        // gets bar height
+                        let barHeight = y0(data[0]) - y0(data[1]);
+
+                        // max allowable text width
+                        let maxTextWidth = x.bandwidth() / dp.Series.length + DATA_LABEL_SETTINGS.BarLabelDisplayTolerance;
+
+                        val = nFormatter(val, displayDigits, displayUnits);
 
                         if (this.getTextWidth(val, DATA_LABEL_SETTINGS) > maxTextWidth ||
                             barHeight <= DATA_LABEL_SETTINGS.BarLabelFontSize) {
@@ -480,12 +483,10 @@ export class D3Visual {
                         .attr('y', data => height - (y0(data[0]) - y0(data[1])) / 2);
                 }
             }
-            // draws bars and bar labels for stacked chart
+            // draws bars and labels for stacked chart
             else {
-                let scaleFactor = 1.5;
-
                 // sets max/min for primary y axis
-                y0.domain([0, yMax ? yMax : Math.ceil(dp.DataNumeric.max * scaleFactor)]);
+                y0.domain([0, yMax ? yMax : Math.ceil(dp.DataNumeric.max * Y_AXIS_SETTINGS.YScaleFactor)]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
 
@@ -495,7 +496,7 @@ export class D3Visual {
                     .remove();
 
                 // set secondary y axis
-                y1.domain([minVal, maxVal ? maxVal : Math.ceil(dp.DataNumeric.max * scaleFactor)]);
+                y1.domain([minVal, maxVal ? maxVal : Math.ceil(dp.DataNumeric.max * Y_AXIS_SETTINGS.YScaleFactor)]);
                 secYAxisG.call(secYAxis)
                     .call(setSecYAxisGAttr);
 
@@ -512,15 +513,16 @@ export class D3Visual {
                     .attr('y', data => y0(data[1]))
                     .attr('height', data => y0(data[0]) - y0(data[1]));
 
-                // show text if bar height allows
+                // show bar label
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
                     barLabel.text(data => {
                         let barHeight = y0(data[0]) - y0(data[1]); // get bar height
                         let val = data.data[dp.Series[idx]]; // get data value
                         let maxTextWidth = x.bandwidth() + DATA_LABEL_SETTINGS.BarLabelDisplayTolerance; // max allowable text width
 
-                        val = nFormatter(val.toString(), displayDigits, displayUnits);
+                        val = nFormatter(val, displayDigits, displayUnits);
 
+                        // show text if space is large enough
                         if (this.getTextWidth(val, DATA_LABEL_SETTINGS) > maxTextWidth ||
                             barHeight <= DATA_LABEL_SETTINGS.BarLabelFontSize) {
                             return null;
@@ -662,49 +664,93 @@ export class D3Visual {
             }
         }
 
-        // bar summation label
-        if (DATA_LABEL_SETTINGS.SumLabelToggle &&
-            LAYOUT_SETTINGS.ChartType == 'stacked') {
+        // show summation label
+        if (DATA_LABEL_SETTINGS.SumLabelToggle) {
 
-            // gets summation values for each column
-            let maxStackData: any[] = stackData[stackData.length - 1];
+            // clustered chart
+            if (LAYOUT_SETTINGS.ChartType == 'clustered') {
+                stackData.forEach((serie, idx) => {
+                    serie.forEach(data => {
+                        let val = data[1] - data[0];
 
-            maxStackData.forEach(data => {
-                let maxVal = data[1];
+                        // display value if not 0
+                        if (val) {
+                            let text = nFormatter(val, displayDigits, displayUnits);
 
-                // display value if not 0
-                if (maxVal) {
-                    let text = nFormatter(maxVal, displayDigits, displayUnits);
+                            // display value if bar width allows
+                            if (x.bandwidth() + DATA_LABEL_SETTINGS.SumLabelDisplayTolerance > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
+                                let sumBgWidth = x.bandwidth() / dp.Series.length;
 
-                    // display value if bar width allows
-                    if (x.bandwidth() + DATA_LABEL_SETTINGS.SumLabelDisplayTolerance > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
-                        let sumBgWidth = x.bandwidth();
+                                if (DATA_LABEL_SETTINGS.SumLabelBgToggle) {
+                                    // background
+                                    svg.append('rect')
+                                        .attr('width', sumBgWidth)
+                                        .attr('height', 20)
+                                        .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
+                                        .attr('y', y0(val) - 20)
+                                        // x = bar group xpos + serie xpos
+                                        .attr('x', x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx);
+                                }
 
-                        if (DATA_LABEL_SETTINGS.SumLabelBgToggle) {
-                            // background
-                            svg.append('rect')
-                                .attr('width', sumBgWidth)
-                                .attr('height', 20)
-                                .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
-                                .attr('y', y0(maxVal) - 20)
-                                .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
+                                // text
+                                svg.append('text')
+                                    .attr('width', x.bandwidth())
+                                    .attr('fill', DATA_LABEL_SETTINGS.SumLabelColor)
+                                    .attr('font-size', DATA_LABEL_SETTINGS.SumLabelFontSize)
+                                    .attr('font-family', DATA_LABEL_SETTINGS.FontFamily)
+                                    .attr('text-anchor', 'middle')
+                                    .attr('dominant-baseline', 'middle')
+                                    .attr('y', y0(val) - 10)
+                                    // x = bar group xpos + serie xpos + half of bar width
+                                    .attr('x', x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx + x.bandwidth() / dp.Series.length / 2)
+                                    .text(text);
+                            }
                         }
+                    });
+                });
+            }
 
-                        // text
-                        svg.append('text')
-                            .attr('width', x.bandwidth())
-                            .attr('height', 20)
-                            .attr('fill', DATA_LABEL_SETTINGS.SumLabelColor)
-                            .attr('font-size', DATA_LABEL_SETTINGS.SumLabelFontSize)
-                            .attr('font-family', DATA_LABEL_SETTINGS.FontFamily)
-                            .attr('text-anchor', 'middle')
-                            .attr('dominant-baseline', 'middle')
-                            .attr('y', y0(maxVal) - 10)
-                            .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2)
-                            .text(text);
+            // stacked chart
+            else {
+                // gets summation values for each column
+                let maxStackData: any[] = stackData[stackData.length - 1];
+
+                maxStackData.forEach(data => {
+                    let maxVal = data[1];
+
+                    // display value if not 0
+                    if (maxVal) {
+                        let text = nFormatter(maxVal, displayDigits, displayUnits);
+
+                        // display value if bar width allows
+                        if (x.bandwidth() + DATA_LABEL_SETTINGS.SumLabelDisplayTolerance > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
+                            let sumBgWidth = x.bandwidth();
+
+                            if (DATA_LABEL_SETTINGS.SumLabelBgToggle) {
+                                // background
+                                svg.append('rect')
+                                    .attr('width', sumBgWidth)
+                                    .attr('height', 20)
+                                    .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
+                                    .attr('y', y0(maxVal) - 20)
+                                    .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
+                            }
+
+                            // text
+                            svg.append('text')
+                                .attr('width', x.bandwidth())
+                                .attr('fill', DATA_LABEL_SETTINGS.SumLabelColor)
+                                .attr('font-size', DATA_LABEL_SETTINGS.SumLabelFontSize)
+                                .attr('font-family', DATA_LABEL_SETTINGS.FontFamily)
+                                .attr('text-anchor', 'middle')
+                                .attr('dominant-baseline', 'middle')
+                                .attr('y', y0(maxVal) - 10)
+                                .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2)
+                                .text(text);
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         // growth indicator
@@ -776,25 +822,36 @@ export class D3Visual {
                     }
                     // if capacity is 0, use 12-month previous
                     else {
-                        let months = Interfaces.MonthNames;
+                        // gets shortened month ex Jan
+                        let month = dp.Columns[primGrowth2Index].toLowerCase().slice(0, 3);
+
+                        // gets shortened year ex 21
+                        let year = dp.Columns[primGrowth2Index].slice(4);
+
+                        // gets array of month names
+                        let months = [];
+                        Interfaces.MonthNames.forEach(month => {
+                            months.push(month.toLowerCase().slice(0, 3));
+                        });
+
                         // if 12-month prev == 0 find next closest available non-zero month, starting from 12-month prev and incrementing
                         primGrowth1Index = primGrowth2Index - 12 < 0 ? 0 : primGrowth2Index - 12;
 
-                        // gets shortened month ex Jan
-                        let month = dp.Columns[primGrowth2Index].slice(0, 3);
-                        // gets shortened year ex 21
-                        let year = parseInt(dp.Columns[primGrowth2Index].slice(4));
+                        // check if format is valid
+                        // month must exist
+                        /// year must be a number
+                        if (months.indexOf(month) > -1 && +year) {
+                            // decrements year
+                            year = parseInt(year) - 1;
 
-                        // decrements year
-                        year--;
+                            // sets column name
+                            let col = month.charAt(0).toUpperCase() + month.slice(1) + '-' + year.toString();
 
-                        // sets column name
-                        let col = month + '-' + year.toString();
-
-                        // finds 13 month range
-                        for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
-                            if (dp.Columns[primGrowth1Index] != col || !this.getSum(primGrowth1Index)) {
-                                primGrowth1Index++;
+                            // finds 13 month range
+                            for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
+                                if (dp.Columns[primGrowth1Index] != col) {
+                                    primGrowth1Index++;
+                                }
                             }
                         }
 
@@ -824,6 +881,9 @@ export class D3Visual {
                     let growth2Y = y0(primGrowth2Sum) - heightOffset;
                     let growth2X = x(primarySelect2) + x.bandwidth() / 2;
 
+                    // console.log(primGrowth1Sum, primGrowth2Sum)
+                    // console.log(primarySelect1, primarySelect2)
+
                     // defines line coordinates
                     let path = d3.line()([
                         [growth1X, growth1Y],
@@ -834,17 +894,14 @@ export class D3Visual {
                     // draw line
                     this.drawLine(path, 'growthLine', PRIMARY_LINE_SETTINGS);
 
-                    // draw first arrow
-                    this.drawTriangle(growth1X, growth1Y, PRIMARY_LINE_SETTINGS, 60);
-
-                    // draw second arrow
-                    this.drawTriangle(growth2X, growth2Y, PRIMARY_LINE_SETTINGS, 60);
-
                     let averageX = (growth1X + growth2X) / 2;
 
                     // calculate label text
                     let growthValue = hasCapacity ? primGrowth2Sum / primGrowth1Sum : primGrowth1Sum / primGrowth2Sum;
                     growthValue = (1 - growthValue) * 100;
+
+                    // removes negative sign if needed
+                    growthValue = PRIMARY_LABEL_SETTINGS.ShowSign ? growthValue : Math.abs(growthValue);
 
                     let growthValueRounded = Math.round(growthValue * 10) / 10 + '%';
 
@@ -853,6 +910,28 @@ export class D3Visual {
 
                     // draw label text
                     this.drawText(averageX, yPos, PRIMARY_LABEL_SETTINGS, growthValueRounded.toString());
+
+                    switch (PRIMARY_LINE_SETTINGS.DisplayArrow) {
+                        case 'left':
+                            // draw first arrow
+                            this.drawTriangle(growth1X, growth1Y, PRIMARY_LINE_SETTINGS, 60);
+                            break;
+
+                        case 'right':
+                            // draw second arrow
+                            this.drawTriangle(growth2X, growth2Y, PRIMARY_LINE_SETTINGS, 60);
+                            break;
+
+                        case 'both':
+                            // draw first arrow
+                            this.drawTriangle(growth1X, growth1Y, PRIMARY_LINE_SETTINGS, 60);
+                            // draw second arrow
+                            this.drawTriangle(growth2X, growth2Y, PRIMARY_LINE_SETTINGS, 60);
+                            break;
+
+                        default:
+                            break;
+                    }
                 }
                 catch (e) {
                     this.parent.innerHTML = 'Unable to create primary growth labels';
@@ -951,6 +1030,7 @@ export class D3Visual {
 
                         // calculate label text
                         let growthValue = (1 - data1 / data2) * 100;
+                        growthValue = SECONDARY_LABEL_SETTINGS.ShowSign ? growthValue : Math.abs(growthValue);
                         let growthValueRounded = Math.round(growthValue * 10) / 10 + '%';
 
                         // draw label background shape
@@ -959,12 +1039,27 @@ export class D3Visual {
                         // draw label text
                         this.drawText(xPos, averageY, SECONDARY_LABEL_SETTINGS, growthValueRounded.toString());
 
-                        // draw first arrow
-                        this.drawTriangle(growth1X, growth1Y, SECONDARY_LINE_SETTINGS, 30);
+                        switch (SECONDARY_LINE_SETTINGS.DisplayArrow) {
+                            case 'left':
+                                // draw first arrow
+                                this.drawTriangle(growth1X, growth1Y, SECONDARY_LINE_SETTINGS, 30);
+                                break;
 
-                        // draw second arrow
-                        this.drawTriangle(growth2X, growth2Y, SECONDARY_LINE_SETTINGS, 30);
+                            case 'right':
+                                // draw second arrow
+                                this.drawTriangle(growth2X, growth2Y, SECONDARY_LINE_SETTINGS, 30);
+                                break;
 
+                            case 'both':
+                                // draw first arrow
+                                this.drawTriangle(growth1X, growth1Y, SECONDARY_LINE_SETTINGS, 30);
+                                // draw second arrow
+                                this.drawTriangle(growth2X, growth2Y, SECONDARY_LINE_SETTINGS, 30);
+                                break;
+
+                            default:
+                                break;
+                        }
                     } catch (e) {
                         this.container.innerHTML = "Unable to create secondary growth labels";
                     }
@@ -1038,6 +1133,7 @@ export class D3Visual {
 
                             // calculate label text
                             let growthValue = (1 - data1 / data2) * 100;
+                            growthValue = PRIMARY_LABEL_SETTINGS.ShowSign ? growthValue : Math.abs(growthValue);
                             let growthValueRounded = Math.round(growthValue * 10) / 10 + '%';
 
                             // draw label background shape
@@ -1046,12 +1142,27 @@ export class D3Visual {
                             // draw label text
                             this.drawText(averageX, yPos, PRIMARY_LABEL_SETTINGS, growthValueRounded.toString());
 
-                            // draw first arrow
-                            this.drawTriangle(growth1X, growth1Y, PRIMARY_LINE_SETTINGS, 60);
+                            switch (PRIMARY_LINE_SETTINGS.DisplayArrow) {
+                                case 'left':
+                                    // draw first arrow
+                                    this.drawTriangle(growth1X, growth1Y, PRIMARY_LINE_SETTINGS, 60);
+                                    break;
 
-                            // draw second arrow
-                            this.drawTriangle(growth2X, growth2Y, PRIMARY_LINE_SETTINGS, 60);
+                                case 'right':
+                                    // draw second arrow
+                                    this.drawTriangle(growth2X, growth2Y, PRIMARY_LINE_SETTINGS, 60);
+                                    break;
 
+                                case 'both':
+                                    // draw first arrow
+                                    this.drawTriangle(growth1X, growth1Y, PRIMARY_LINE_SETTINGS, 60);
+                                    // draw second arrow
+                                    this.drawTriangle(growth2X, growth2Y, PRIMARY_LINE_SETTINGS, 60);
+                                    break;
+
+                                default:
+                                    break;
+                            }
                         } catch (e) {
                             this.container.innerHTML = "Unable to create primary growth labels";
                         }
@@ -1060,33 +1171,35 @@ export class D3Visual {
             }
 
             // adds secondary growth indicator
-            if (SECONDARY_GROWTH_SETTINGS.ToggleSecondaryIndicator) {
+            if (dp.Series.length > 1 &&
+                SECONDARY_GROWTH_SETTINGS.ToggleSecondaryIndicator) {
                 // get serie selectors
                 let secondarySelect1 = SECONDARY_GROWTH_SETTINGS.Selector1;
                 let secondarySelect2 = SECONDARY_GROWTH_SETTINGS.Selector2;
 
-                // get indexes if selectors aren't empty, otherwise use default values
-                let sIdx1 = secondarySelect1 ? dp.Series.indexOf(secondarySelect1) : dp.Series.length - 2;
-                let sIdx2 = secondarySelect2 ? dp.Series.indexOf(secondarySelect2) : dp.Series.length - 1;
+                let selectors1 = [];
+                let selectors2 = [];
 
-                // reassigns serie selectors based on index
-                secondarySelect1 = dp.Series[sIdx1];
-                secondarySelect2 = dp.Series[sIdx2];
+                // splits secondary selectors using comma as delimiter and removes extra spaces
+                // appends to array
+                // note that empty strings are valid selectors, as long as they are separated by commas
+                secondarySelect1.split(',').forEach(s => selectors1.push(s.trim()));
+                secondarySelect2.split(',').forEach(s => selectors2.push(s.trim()));
 
                 // gets selectors list
-                let selectorsList = SECONDARY_GROWTH_SETTINGS.SelectorsList;
-                let selectors = [];
+                let groupSelectors = SECONDARY_GROWTH_SETTINGS.GroupSelectors;
+                let grpSel = [];
                 // in case of multiple selectors, splits selectors based on comma and appends to array
-                selectorsList.split(',').forEach(s => selectors.push(s.trim()));
+                groupSelectors.split(',').forEach(s => grpSel.push(s.trim()));
 
-                // draws indicator for each selector
-                selectors.forEach(selector => {
+                // draws indicator for each group selector
+                grpSel.forEach(barGroup => {
                     let selIdx;
 
                     // gets index of selected group
                     // if selector is empty, defaults to first-from-last non-zero group
-                    if (selector) {
-                        selIdx = this.getIndex(selector); // get index
+                    if (barGroup) {
+                        selIdx = this.getIndex(barGroup); // get index
                     } else {
                         // get default value
                         // loops until a non-zero serie sum is found
@@ -1098,74 +1211,113 @@ export class D3Visual {
                                 break;
                         }
                         // assigns selector to first non-zero column
-                        selector = dp.D3Data[selIdx].sharedAxis;
+                        barGroup = dp.D3Data[selIdx].sharedAxis;
                     }
 
-                    // gets data points for both serie selections based on selected indices
-                    let data1 = dp.D3Data[selIdx][secondarySelect1];
-                    let data2 = dp.D3Data[selIdx][secondarySelect2];
+                    // loop for each selector in selector array
+                    selectors1.forEach((selector, idx) => {
+                        let lastIdx;
+                        // loops through all series for specific bar group
+                        // returns first-from-last non-zero column
+                        for (lastIdx = dp.Series.length - 1; lastIdx >= 0; lastIdx--) {
+                            if (dp.D3Data[selIdx][dp.Series[lastIdx]])
+                                break;
+                        }
 
-                    try {
-                        // initializes coordinate points based on bars selected
-                        let growth1Y = y0(data1);
-                        let growth2Y = y0(data2);
+                        // gets selectors
+                        let selector1 = selector;
+                        let selector2 = selectors2[idx];
 
-                        let averageY = (growth2Y + growth1Y) / 2;
+                        // get indexes if selectors aren't empty, otherwise use default values
+                        let sIdx1 = selector1 ? dp.Series.indexOf(selector1) : lastIdx - 1;
+                        let sIdx2 = selector2 ? dp.Series.indexOf(selector2) : lastIdx;
 
-                        // calculates starting x positions for line, defaults to right corner of bar
-                        let growth1X = x(selector) + x.bandwidth() / dp.Series.length * sIdx1;
-                        let growth2X = x(selector) + x.bandwidth() / dp.Series.length * sIdx2;
+                        // reassigns serie selectors based on index
+                        selector1 = dp.Series[sIdx1];
+                        selector2 = dp.Series[sIdx2];
 
-                        // calculates x pos for label
-                        let xPos = Math.min(growth2X, growth1X) - SECONDARY_LABEL_SETTINGS.xOffset;
-                        // ensures x pos does not exceed width
-                        xPos = xPos < 0 ? 0 : xPos;
+                        // gets data points for both serie selections based on selected indices
+                        let data1 = dp.D3Data[selIdx][selector1];
+                        let data2 = dp.D3Data[selIdx][selector2];
 
-                        if (SECONDARY_LABEL_SETTINGS.DisplaySide == 'right') {
-                            // adds offset to account for bar width
-                            growth1X += x.bandwidth() / dp.Series.length;
-                            growth2X += x.bandwidth() / dp.Series.length;
+                        try {
+                            // initializes coordinate points based on bars selected
+                            let growth1Y = y0(data1);
+                            let growth2Y = y0(data2);
 
-                            // gets desired x position
-                            xPos = Math.max(growth2X, growth1X) + SECONDARY_LABEL_SETTINGS.xOffset;
+                            let averageY = (growth2Y + growth1Y) / 2;
+
+                            // calculates starting x positions for line, defaults to right corner of bar
+                            let growth1X = x(barGroup) + x.bandwidth() / dp.Series.length * sIdx1;
+                            let growth2X = x(barGroup) + x.bandwidth() / dp.Series.length * sIdx2;
+
+                            // calculates x pos for label
+                            let xPos = Math.min(growth2X, growth1X) - SECONDARY_LABEL_SETTINGS.xOffset;
                             // ensures x pos does not exceed width
-                            xPos = xPos < trueWidth ? xPos : trueWidth;
+                            xPos = xPos < 0 ? 0 : xPos;
+
+                            if (SECONDARY_LABEL_SETTINGS.DisplaySide == 'right') {
+                                // adds offset to account for bar width
+                                growth1X += x.bandwidth() / dp.Series.length;
+                                growth2X += x.bandwidth() / dp.Series.length;
+
+                                // gets desired x position
+                                xPos = Math.max(growth2X, growth1X) + SECONDARY_LABEL_SETTINGS.xOffset;
+                                // ensures x pos does not exceed width
+                                xPos = xPos < trueWidth ? xPos : trueWidth;
+                            }
+
+                            // draw line
+                            let path = d3.line()([
+                                [growth1X, growth1Y],
+                                [xPos, growth1Y],
+                                [xPos, growth2Y],
+                                [growth2X, growth2Y]]);
+
+                            this.drawLine(path, 'growthLineValues', SECONDARY_LINE_SETTINGS);
+
+                            // sets line type
+                            if (SECONDARY_LINE_SETTINGS.LineType == 'dashed') {
+                                svg.selectAll('.growthLineValues')
+                                    .attr('stroke-dasharray', '5,4');
+                            }
+
+                            // calculate label text
+                            let growthValue = (1 - data1 / data2) * 100;
+                            growthValue = SECONDARY_LABEL_SETTINGS.ShowSign ? growthValue : Math.abs(growthValue);
+                            let growthValueRounded = Math.round(growthValue * 10) / 10 + '%';
+
+                            // draw label background shape
+                            this.drawEllipse(xPos, averageY, growthValueRounded.toString(), SECONDARY_LABEL_SETTINGS);
+
+                            // draw label text
+                            this.drawText(xPos, averageY, SECONDARY_LABEL_SETTINGS, growthValueRounded.toString());
+
+                            switch (SECONDARY_LINE_SETTINGS.DisplayArrow) {
+                                case 'left':
+                                    // draw first arrow
+                                    this.drawTriangle(growth1X, growth1Y, SECONDARY_LINE_SETTINGS, 30);
+                                    break;
+
+                                case 'right':
+                                    // draw second arrow
+                                    this.drawTriangle(growth2X, growth2Y, SECONDARY_LINE_SETTINGS, 30);
+                                    break;
+
+                                case 'both':
+                                    // draw first arrow
+                                    this.drawTriangle(growth1X, growth1Y, SECONDARY_LINE_SETTINGS, 30);
+                                    // draw second arrow
+                                    this.drawTriangle(growth2X, growth2Y, SECONDARY_LINE_SETTINGS, 30);
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        } catch (e) {
+                            this.container.innerHTML = "Unable to create secondary growth labels";
                         }
-
-                        // draw line
-                        let path = d3.line()([
-                            [growth1X, growth1Y],
-                            [xPos, growth1Y],
-                            [xPos, growth2Y],
-                            [growth2X, growth2Y]]);
-
-                        this.drawLine(path, 'growthLineValues', SECONDARY_LINE_SETTINGS);
-
-                        // sets line type
-                        if (SECONDARY_LINE_SETTINGS.LineType == 'dashed') {
-                            svg.selectAll('.growthLineValues')
-                                .attr('stroke-dasharray', '5,4');
-                        }
-
-                        // calculate label text
-                        let growthValue = (1 - data1 / data2) * 100;
-                        let growthValueRounded = Math.round(growthValue * 10) / 10 + '%'
-
-                        // draw label background shape
-                        this.drawEllipse(xPos, averageY, growthValueRounded.toString(), SECONDARY_LABEL_SETTINGS);
-
-                        // draw label text
-                        this.drawText(xPos, averageY, SECONDARY_LABEL_SETTINGS, growthValueRounded.toString());
-
-                        // draw first arrow
-                        this.drawTriangle(growth1X, growth1Y, SECONDARY_LINE_SETTINGS, 30);
-
-                        // draw second arrow
-                        this.drawTriangle(growth2X, growth2Y, SECONDARY_LINE_SETTINGS, 30);
-
-                    } catch (e) {
-                        this.container.innerHTML = "Unable to create secondary growth labels";
-                    }
+                    });
                 });
             }
         }
@@ -1259,12 +1411,10 @@ export class D3Visual {
         * Param: x coord, y coord, settings, rotation 
         * Returns: none
         */
-        if (settings.ArrowToggle) {
-            this.svg.append('path')
-                .attr('d', d3.symbol().type(d3.symbolTriangle).size(settings.ArrowSize))
-                .attr('fill', settings.LineColor)
-                .attr('transform', `translate(${x}, ${y}) rotate(${rotation})`);
-        }
+        this.svg.append('path')
+            .attr('d', d3.symbol().type(d3.symbolTriangle).size(settings.ArrowSize))
+            .attr('fill', settings.LineColor)
+            .attr('transform', `translate(${x}, ${y}) rotate(${rotation})`);
     }
 
     // adds text to svg

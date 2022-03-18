@@ -1,8 +1,6 @@
-import { NumberValue } from "d3-scale";
 import powerbi from "powerbi-visuals-api";
 import PrimitiveValue = powerbi.PrimitiveValue;
 import ISelectionId = powerbi.visuals.ISelectionId;
-
 
 // data process interfaces
 

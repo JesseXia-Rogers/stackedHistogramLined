@@ -1,15 +1,8 @@
 import * as Interfaces from './interfaces';
 import powerbi from "powerbi-visuals-api";
-import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import DataView = powerbi.DataView;
 import PrimitiveValue = powerbi.PrimitiveValue;
 import DataViewValueColumnGroup = powerbi.DataViewValueColumnGroup;
-import DataViewValueColumn = powerbi.DataViewValueColumn;
-import { D3Visual } from './d3Visual';
-import { ThresholdSettings } from './settings';
-import { format } from 'd3-format';
-import * as d3 from 'd3';
-
 
 export let LineValues: number[] = [];
 export let Capacity: number[] = [];

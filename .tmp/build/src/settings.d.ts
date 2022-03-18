@@ -40,6 +40,7 @@ export declare class XAxisSettings {
 export declare class YAxisSettings {
     DisplayUnits: string;
     YMaxValue: number;
+    YScaleFactor: number;
     TickCount: number;
     ToggleGridLines: boolean;
     FontFamily: string;
@@ -99,7 +100,7 @@ export declare class SecondaryGrowthSettings {
     ToggleSecondaryIndicator: boolean;
     Selector1: string;
     Selector2: string;
-    SelectorsList: string;
+    GroupSelectors: string;
 }
 export declare class PrimaryLabelSettings {
     LabelBackgroundColor: string;
@@ -111,6 +112,7 @@ export declare class PrimaryLabelSettings {
     LabelOffsetHeight: number;
     LabelHeight: number;
     LabelMinWidth: number;
+    ShowSign: boolean;
     ToggleBgShape: boolean;
 }
 export declare class PrimaryLineSettings {
@@ -119,7 +121,7 @@ export declare class PrimaryLineSettings {
     LineOffsetHeight: number;
     LineSize: number;
     ArrowSize: number;
-    ArrowToggle: boolean;
+    DisplayArrow: string;
 }
 export declare class SecondaryLabelSettings {
     DisplaySide: string;
@@ -132,6 +134,7 @@ export declare class SecondaryLabelSettings {
     FontSize: number;
     LabelHeight: number;
     LabelMinWidth: number;
+    ShowSign: boolean;
     ToggleBgShape: boolean;
 }
 export declare class SecondaryLineSettings {
@@ -139,5 +142,5 @@ export declare class SecondaryLineSettings {
     LineType: string;
     LineSize: number;
     ArrowSize: number;
-    ArrowToggle: boolean;
+    DisplayArrow: string;
 }

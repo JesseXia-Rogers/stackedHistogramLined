@@ -82,6 +82,8 @@ export class YAxisSettings {
     public DisplayUnits: string = 'auto';
 
     public YMaxValue: number = 0;
+    public YScaleFactor: number = 1.3;
+
     public TickCount: number = 3;
 
     public ToggleGridLines: boolean = true;
@@ -162,7 +164,7 @@ export class SecondaryGrowthSettings {
     public Selector1: string = '';
     public Selector2: string = '';
 
-    public SelectorsList: string = '';
+    public GroupSelectors: string = '';
 }
 
 export class PrimaryLabelSettings {
@@ -179,6 +181,7 @@ export class PrimaryLabelSettings {
     public LabelHeight: number = 10;
     public LabelMinWidth: number = 20;
 
+    public ShowSign: boolean = true;
     public ToggleBgShape: boolean = true;
 }
 
@@ -190,7 +193,7 @@ export class PrimaryLineSettings {
     public LineSize: number = 1;
 
     public ArrowSize: number = 20;
-    public ArrowToggle: boolean = true;
+    public DisplayArrow: string = 'both';
 }
 
 export class SecondaryLabelSettings {
@@ -210,6 +213,7 @@ export class SecondaryLabelSettings {
     public LabelHeight: number = 10;
     public LabelMinWidth: number = 20;
 
+    public ShowSign: boolean = true;
     public ToggleBgShape: boolean = true;
 }
 
@@ -219,5 +223,5 @@ export class SecondaryLineSettings {
     public LineSize: number = 1;
 
     public ArrowSize: number = 20;
-    public ArrowToggle: boolean = false;
+    public DisplayArrow: string = 'none';
 }

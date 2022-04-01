@@ -119,6 +119,12 @@
                     "type": {
                         "numeric": true
                     }
+                },
+                "YScaleFactor": {
+                    "displayName": "Y Scale Factor",
+                    "type": {
+                        "numeric": true
+                    }
                 }
             }
         },
@@ -131,7 +137,7 @@
                         "bool": true
                     }
                 },
-                "AxisLabelAngle": {
+                "LabelAngle": {
                     "displayName": "Label Rotation",
                     "type": {
                         "numeric": true
@@ -178,7 +184,7 @@
                         "numeric": true
                     }
                 },
-                "AxisLabelAngle": {
+                "LabelAngle": {
                     "displayName": "Label Rotation",
                     "type": {
                         "numeric": true
@@ -201,7 +207,7 @@
         "YAxisSettings": {
             "displayName": "Y-Axis",
             "properties": {
-                "YMaxValue": {
+                "MaxValue": {
                     "displayName": "Max Value",
                     "type": {
                         "numeric": true
@@ -898,6 +904,12 @@
                     "displayName": "Min Label Width",
                     "type": {
                         "numeric": true
+                    }
+                },
+                "ShowSign": {
+                    "displayName": "Show +/- Sign",
+                    "type": {
+                        "bool": true
                     }
                 },
                 "ToggleBgShape": {

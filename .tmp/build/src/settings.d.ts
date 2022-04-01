@@ -22,6 +22,7 @@ export declare class LayoutSettings {
     ChartXMargin: number;
     ChartYMargin: number;
     XAxisBarWhiteSpace: number;
+    YScaleFactor: number;
 }
 export declare class CapacitySettings {
     CapacityToggle: boolean;
@@ -33,14 +34,13 @@ export declare class XAxisSettings {
     FontFamily: string;
     FontColor: string;
     FontSize: number;
-    AxisLabelAngle: number;
+    LabelAngle: number;
     XOffset: number;
     YOffset: number;
 }
 export declare class YAxisSettings {
     DisplayUnits: string;
-    YMaxValue: number;
-    YScaleFactor: number;
+    MaxValue: number;
     TickCount: number;
     ToggleGridLines: boolean;
     FontFamily: string;

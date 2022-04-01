@@ -56,6 +56,8 @@ export class LayoutSettings {
     public ChartYMargin: number = 70;
 
     public XAxisBarWhiteSpace: number = 0.3;
+
+    public YScaleFactor: number = 1.3;
 }
 
 export class CapacitySettings {
@@ -72,7 +74,7 @@ export class XAxisSettings {
     public FontColor: string = '#666666';
     public FontSize: number = 10;
 
-    public AxisLabelAngle: number = 0;
+    public LabelAngle: number = 0;
 
     public XOffset: number = 0;
     public YOffset: number = 0;
@@ -81,8 +83,7 @@ export class XAxisSettings {
 export class YAxisSettings {
     public DisplayUnits: string = 'auto';
 
-    public YMaxValue: number = 0;
-    public YScaleFactor: number = 1.3;
+    public MaxValue: number = 0;
 
     public TickCount: number = 3;
 
@@ -105,8 +106,8 @@ export class SecondaryYAxis {
     public TickCount: number = 3;
 
     public FontFamily: string = 'Calibri';
-    public FontColor: string = '#000000';
-    public FontSize: number = 11;
+    public FontColor: string = '#666666';
+    public FontSize: number = 10;
 }
 
 export class DataColors {

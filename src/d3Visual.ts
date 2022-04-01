@@ -5,7 +5,7 @@ import * as Interfaces from './interfaces';
 
 import * as d3 from 'd3';
 import powerbi from 'powerbi-visuals-api';
-import { DataLabelSettings, VisualSettings } from './settings';
+import { VisualSettings } from './settings';
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 
 // type
@@ -163,8 +163,8 @@ export class D3Visual {
             // all other labels
             g.selectAll('.x-axis-g text')
                 .filter(x => x != 'Capacity')
-                .attr('transform', `translate(${X_AXIS_SETTINGS.XOffset}, ${-X_AXIS_SETTINGS.YOffset + height}) rotate(-${X_AXIS_SETTINGS.AxisLabelAngle})`)
-                .style('text-anchor', X_AXIS_SETTINGS.AxisLabelAngle ? 'end' : 'middle');
+                .attr('transform', `translate(${X_AXIS_SETTINGS.XOffset}, ${-X_AXIS_SETTINGS.YOffset + height}) rotate(-${X_AXIS_SETTINGS.LabelAngle})`)
+                .style('text-anchor', X_AXIS_SETTINGS.LabelAngle ? 'end' : 'middle');
         }
 
         // render x axis
@@ -416,7 +416,7 @@ export class D3Visual {
                 }
             }
 
-            let yMax = Y_AXIS_SETTINGS.YMaxValue;
+            let yMax = Y_AXIS_SETTINGS.MaxValue;
 
             // draws bars & labels for clustered chart
             if (LAYOUT_SETTINGS.ChartType == 'clustered') {
@@ -424,7 +424,7 @@ export class D3Visual {
                 let localRange = this.getRange().max;
 
                 // set primary y axis min/max values
-                y0.domain([0, yMax ? yMax : localRange]);
+                y0.domain([0, yMax ? yMax : localRange * LAYOUT_SETTINGS.YScaleFactor]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
 
@@ -434,7 +434,7 @@ export class D3Visual {
                     .remove();
 
                 // set secondary y axis
-                y1.domain([minVal, maxVal ? maxVal : localRange]);
+                y1.domain([minVal, maxVal ? maxVal : localRange * LAYOUT_SETTINGS.YScaleFactor]);
                 secYAxisG.call(secYAxis)
                     .call(setSecYAxisGAttr);
 
@@ -486,7 +486,7 @@ export class D3Visual {
             // draws bars and labels for stacked chart
             else {
                 // sets max/min for primary y axis
-                y0.domain([0, yMax ? yMax : Math.ceil(dp.DataNumeric.max * Y_AXIS_SETTINGS.YScaleFactor)]);
+                y0.domain([0, yMax ? yMax : Math.ceil(dp.DataNumeric.max * LAYOUT_SETTINGS.YScaleFactor)]);
                 yAxisG.call(yAxis)
                     .call(setYAxisGAttr);
 
@@ -496,7 +496,7 @@ export class D3Visual {
                     .remove();
 
                 // set secondary y axis
-                y1.domain([minVal, maxVal ? maxVal : Math.ceil(dp.DataNumeric.max * Y_AXIS_SETTINGS.YScaleFactor)]);
+                y1.domain([minVal, maxVal ? maxVal : Math.ceil(dp.DataNumeric.max * LAYOUT_SETTINGS.YScaleFactor)]);
                 secYAxisG.call(secYAxis)
                     .call(setSecYAxisGAttr);
 
@@ -676,20 +676,25 @@ export class D3Visual {
                         // display value if not 0
                         if (val) {
                             let text = nFormatter(val, displayDigits, displayUnits);
+                            let textWidth = this.getTextWidth(text, DATA_LABEL_SETTINGS);
 
                             // display value if bar width allows
-                            if (x.bandwidth() + DATA_LABEL_SETTINGS.SumLabelDisplayTolerance > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
-                                let sumBgWidth = x.bandwidth() / dp.Series.length;
+                            if (x.bandwidth() + DATA_LABEL_SETTINGS.SumLabelDisplayTolerance > textWidth) {
+                                let bgPadding = 8;
+                                let sumBgWidth = textWidth + bgPadding;
 
                                 if (DATA_LABEL_SETTINGS.SumLabelBgToggle) {
                                     // background
                                     svg.append('rect')
                                         .attr('width', sumBgWidth)
-                                        .attr('height', 20)
+                                        .attr('height', DATA_LABEL_SETTINGS.SumLabelFontSize + bgPadding / 2)
                                         .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
-                                        .attr('y', y0(val) - 20)
-                                        // x = bar group xpos + serie xpos
-                                        .attr('x', x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx);
+                                        .attr('y', y0(val) - 18)
+                                        // x = bar group xpos + serie xpos - half rect width to center
+                                        .attr('x', x(data.data.sharedAxis.toString())
+                                            + x.bandwidth() / dp.Series.length * idx
+                                            + x.bandwidth() / dp.Series.length / 2
+                                            - sumBgWidth / 2);
                                 }
 
                                 // text
@@ -702,7 +707,9 @@ export class D3Visual {
                                     .attr('dominant-baseline', 'middle')
                                     .attr('y', y0(val) - 10)
                                     // x = bar group xpos + serie xpos + half of bar width
-                                    .attr('x', x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx + x.bandwidth() / dp.Series.length / 2)
+                                    .attr('x', x(data.data.sharedAxis.toString())
+                                        + x.bandwidth() / dp.Series.length * idx
+                                        + x.bandwidth() / dp.Series.length / 2)
                                     .text(text);
                             }
                         }
@@ -721,18 +728,20 @@ export class D3Visual {
                     // display value if not 0
                     if (maxVal) {
                         let text = nFormatter(maxVal, displayDigits, displayUnits);
+                        let textWidth = this.getTextWidth(text, DATA_LABEL_SETTINGS);
 
                         // display value if bar width allows
-                        if (x.bandwidth() + DATA_LABEL_SETTINGS.SumLabelDisplayTolerance > this.getTextWidth(text, DATA_LABEL_SETTINGS)) {
-                            let sumBgWidth = x.bandwidth();
+                        if (x.bandwidth() + DATA_LABEL_SETTINGS.SumLabelDisplayTolerance > textWidth) {
+                            let bgPadding = 8;
+                            let sumBgWidth = textWidth + bgPadding;
 
                             if (DATA_LABEL_SETTINGS.SumLabelBgToggle) {
                                 // background
                                 svg.append('rect')
                                     .attr('width', sumBgWidth)
-                                    .attr('height', 20)
+                                    .attr('height', DATA_LABEL_SETTINGS.SumLabelFontSize + bgPadding / 2)
                                     .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
-                                    .attr('y', y0(maxVal) - 20)
+                                    .attr('y', y0(maxVal) - 18)
                                     .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
                             }
 
@@ -841,20 +850,30 @@ export class D3Visual {
                         // month must exist
                         /// year must be a number
                         if (months.indexOf(month) > -1 && +year) {
-                            // decrements year
+                            // gets year
                             year = parseInt(year) - 1;
 
                             // sets column name
                             let col = month.charAt(0).toUpperCase() + month.slice(1) + '-' + year.toString();
 
                             // finds 13 month range
+                            let rangeExists = false;
                             for (let monthIdx = months.indexOf(month); monthIdx < 12; monthIdx++) {
                                 if (dp.Columns[primGrowth1Index] != col) {
                                     primGrowth1Index++;
+                                } else {
+                                    rangeExists = true;
+                                    break;
                                 }
+                            }
+
+                            // reset index 
+                            if (!rangeExists) {
+                                primGrowth1Index = 0;
                             }
                         }
 
+                        // gets first non-zero column
                         while (primGrowth1Index < dp.Columns.length) {
                             // calculates sum for selected month
                             primGrowth1Sum = this.getSum(primGrowth1Index);
@@ -880,9 +899,6 @@ export class D3Visual {
                     let growth1X = x(primarySelect1) + x.bandwidth() / 2;
                     let growth2Y = y0(primGrowth2Sum) - heightOffset;
                     let growth2X = x(primarySelect2) + x.bandwidth() / 2;
-
-                    // console.log(primGrowth1Sum, primGrowth2Sum)
-                    // console.log(primarySelect1, primarySelect2)
 
                     // defines line coordinates
                     let path = d3.line()([
@@ -1482,9 +1498,6 @@ function nFormatter(num: number, digits: number, displayUnits: string): string {
         { value: 1E18, symbol: 'E', text: 'quintillions' }
     ];
 
-    // regex to remove insignficant digits after decimal place
-    let rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-
     let i;
     // converts numbers into largest reasonable units unless otherwise specified
     if (displayUnits == 'auto') {
@@ -1500,5 +1513,5 @@ function nFormatter(num: number, digits: number, displayUnits: string): string {
             }
         }
     }
-    return (num / si[i].value).toFixed(digits).replace(rx, '$1') + si[i].symbol;
+    return (num / si[i].value).toFixed(digits) + si[i].symbol;
 }

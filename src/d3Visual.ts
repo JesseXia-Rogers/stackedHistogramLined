@@ -181,7 +181,7 @@ export class D3Visual {
             .tickSize(-width) // draws horizontal gridline across the chart
             .tickFormat(data => {
                 // formats y-axis labels with appropriate units
-                return nFormatter(parseInt(data.toString()), 3, Y_AXIS_SETTINGS.DisplayUnits);
+                return nFormatter(parseInt(data.toString()), 1, Y_AXIS_SETTINGS.DisplayUnits);
             });
 
         // set y axis group

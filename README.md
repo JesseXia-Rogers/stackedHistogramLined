@@ -22,6 +22,8 @@ The code has also (in my opinion😄) been thoroughly commented, though it may s
 - Insert developer visual (ensure developer mode is on, settings => developer => make sure enable developer mode is checked)
 - Add data
 
+Alternatively you can just import the custom visual directly, though using the built-in developer visual is generally more effective.
+
 # Updating Code
 - We're assuming that you already know how to use version control (if not, youtube has lots of tutorials 🤓). Since both myself and the original dev of this chart will be gone by the time any future devs are reading this, feel free to just copy the code and make a new repo. 
 - When you're exporting the code to a file, run `pbiviz package` if it's not automatically updating when you run `pbiviz start`.

@@ -13,7 +13,7 @@ The code has also (in my opinion😄) been thoroughly commented, though it may s
 
 # Environment Setup
 - Ensure node.js is installed (https://nodejs.org/en/)
-- Go to the Microsoft Power BI documentation (https://docs.microsoft.com/en-us/power-bi/developer/visuals/environment-setup?tabs=windows#create-and-install-a-certificate), and follow their instructions to setup a certificate. Will be helpful to follow their instructions for setting up Power BI service for development as well.
+- Go to the Microsoft Power BI documentation (https://docs.microsoft.com/en-us/power-bi/developer/visuals/environment-setup?tabs=windows#create-and-install-a-certificate), and follow their instructions to setup a certificate. It may be helpful to follow their instructions for setting up Power BI service for development as well.
 - From terminal, run `npm i .` in project directory
 
 # Running

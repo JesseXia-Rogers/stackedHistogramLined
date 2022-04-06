@@ -213,6 +213,12 @@
                         "numeric": true
                     }
                 },
+                "DisplayDigits": {
+                    "displayName": "Displayed Decimal Places",
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "DisplayUnits": {
                     "displayName": "Display Units",
                     "type": {
@@ -305,6 +311,12 @@
                 },
                 "TickCount": {
                     "displayName": "Axis Tick Count",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "DisplayDigits": {
+                    "displayName": "Displayed Decimal Places",
                     "type": {
                         "numeric": true
                     }

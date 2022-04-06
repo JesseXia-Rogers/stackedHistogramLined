@@ -181,7 +181,7 @@ export class D3Visual {
             .tickSize(-width) // draws horizontal gridline across the chart
             .tickFormat(data => {
                 // formats y-axis labels with appropriate units
-                return nFormatter(parseInt(data.toString()), 1, Y_AXIS_SETTINGS.DisplayUnits);
+                return nFormatter(parseInt(data.toString()), Y_AXIS_SETTINGS.DisplayDigits, Y_AXIS_SETTINGS.DisplayUnits);
             });
 
         // set y axis group
@@ -216,7 +216,7 @@ export class D3Visual {
         // set properties
         let secYAxis = d3.axisRight(y1)
             .tickFormat(data => {
-                return nFormatter(parseInt(data.toString()), 3, SECONDARY_Y_AXIS.DisplayUnits);
+                return nFormatter(parseInt(data.toString()), SECONDARY_Y_AXIS.DisplayDigits, SECONDARY_Y_AXIS.DisplayUnits);
             });
 
         // create group

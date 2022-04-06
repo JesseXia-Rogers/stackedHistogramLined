@@ -82,6 +82,7 @@ export class XAxisSettings {
 
 export class YAxisSettings {
     public DisplayUnits: string = 'auto';
+    public DisplayDigits: number = 1;
 
     public MaxValue: number = 0;
 
@@ -102,6 +103,7 @@ export class SecondaryYAxis {
     public MaxValue: number = 0;
 
     public DisplayUnits: string = 'auto';
+    public DisplayDigits: number = 1;
 
     public TickCount: number = 3;
 

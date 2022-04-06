@@ -40,6 +40,7 @@ export declare class XAxisSettings {
 }
 export declare class YAxisSettings {
     DisplayUnits: string;
+    DisplayDigits: number;
     MaxValue: number;
     TickCount: number;
     ToggleGridLines: boolean;
@@ -52,6 +53,7 @@ export declare class SecondaryYAxis {
     MinValue: number;
     MaxValue: number;
     DisplayUnits: string;
+    DisplayDigits: number;
     TickCount: number;
     FontFamily: string;
     FontColor: string;

@@ -20,7 +20,8 @@ export declare class VisualSettings extends DataViewObjectsParser {
 export declare class LayoutSettings {
     ChartType: string;
     ChartXMargin: number;
-    ChartYMargin: number;
+    ChartTopMargin: number;
+    ChartBottomMargin: number;
     XAxisBarWhiteSpace: number;
     YScaleFactor: number;
 }
@@ -90,6 +91,7 @@ export declare class ThresholdSettings {
     ThresholdToggle: boolean;
     ThresholdAlign: boolean;
     LineThickness: number;
+    LineOffsetHeight: number;
     LineColor: string;
     LineType: string;
 }
@@ -141,8 +143,8 @@ export declare class SecondaryLabelSettings {
 }
 export declare class SecondaryLineSettings {
     LineColor: string;
-    LineType: string;
     LineSize: number;
+    LineType: string;
     ArrowSize: number;
     DisplayArrow: string;
 }

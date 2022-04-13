@@ -53,8 +53,9 @@ export class LayoutSettings {
     public ChartType: string = 'stacked';
 
     public ChartXMargin: number = 85;
-    public ChartYMargin: number = 70;
-
+    public ChartTopMargin: number = 35;
+    public ChartBottomMargin: number = 35;
+    
     public XAxisBarWhiteSpace: number = 0.3;
 
     public YScaleFactor: number = 1.3;
@@ -93,7 +94,6 @@ export class YAxisSettings {
     public FontFamily: string = 'Calibri';
     public FontColor: string = '#666666';
     public FontSize: number = 10;
-
 }
 
 export class SecondaryYAxis {
@@ -150,6 +150,7 @@ export class ThresholdSettings {
     public ThresholdToggle: boolean = true;
     public ThresholdAlign: boolean = false;
     public LineThickness: number = 1;
+    public LineOffsetHeight: number = 0;
     public LineColor: string = '#FF0000';
     public LineType: string = 'dashed';
 }
@@ -222,8 +223,8 @@ export class SecondaryLabelSettings {
 
 export class SecondaryLineSettings {
     public LineColor: string = '#808080';
-    public LineType: string = 'dashed';
     public LineSize: number = 1;
+    public LineType: string = 'dashed';
 
     public ArrowSize: number = 20;
     public DisplayArrow: string = 'none';

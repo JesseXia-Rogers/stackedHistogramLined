@@ -106,21 +106,20 @@ export class D3Visual {
 
         // get and set svg attr
         let xPadding = LAYOUT_SETTINGS.ChartXMargin;
-        let yPadding = LAYOUT_SETTINGS.ChartYMargin;
+        let yPadding = LAYOUT_SETTINGS.ChartBottomMargin + LAYOUT_SETTINGS.ChartTopMargin;
 
         let width = svgSelector.offsetWidth - xPadding;
         let height = svgSelector.offsetHeight - yPadding;
-        let marginTop = 40;
 
         // adjusts padding to add more space for legend
         if (LEGEND_SETTINGS.LegendPosition == 'bottom' && LEGEND_SETTINGS.LegendToggle) {
             height = this.dimension.height - yPadding;
-            marginTop = 20;
         }
 
         svg.attr('width', width)
             .attr('height', height)
-            .style('margin-top', `${marginTop}px`)
+            .style('margin-top', `${LAYOUT_SETTINGS.ChartTopMargin}px`)
+            .style('margin-bottom', `${LAYOUT_SETTINGS.ChartBottomMargin}px`)
             .attr('overflow', 'visible');
 
         // removes capacity if 0 or toggled off
@@ -1513,5 +1512,5 @@ function nFormatter(num: number, digits: number, displayUnits: string): string {
             }
         }
     }
-    return (num / si[i].value).toFixed(digits) + si[i].symbol;
+    return parseFloat((num / si[i].value).toFixed(digits)).toLocaleString() + si[i].symbol;
 }

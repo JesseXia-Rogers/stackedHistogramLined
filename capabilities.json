@@ -108,8 +108,14 @@
                         "numeric": true
                     }
                 },
-                "ChartYMargin": {
-                    "displayName": "Chart Vertical Margin",
+                "ChartTopMargin": {
+                    "displayName": "Chart Margin Top",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "ChartBottomMargin": {
+                    "displayName": "Chart Margin Bottom",
                     "type": {
                         "numeric": true
                     }
@@ -592,6 +598,12 @@
                     "displayName": "Show Threshold",
                     "type": {
                         "bool": true
+                    }
+                },
+                "LineOffsetHeight": {
+                    "displayName": "Line Offset Height",
+                    "type": {
+                        "numeric": true
                     }
                 },
                 "ThresholdAlign": {

@@ -45,8 +45,6 @@ export function transformData(dataView: DataView): void {
     
     const series: DataViewValueColumnGroup[] = dataView.categorical.values.grouped();
 
-    console.log(series)
-
     const category: powerbi.DataViewCategoryColumn = dataView.categorical.categories[0]; // get initial data from powerbi
     let columns = category.values; // creates variables to store and separate initial data
     let columnSource = category.source;
@@ -120,8 +118,6 @@ export function transformData(dataView: DataView): void {
 
         D3Data.push(data);
     }
-
-    console.log(D3Data)
 
     // remove any columns with null or empty name
     D3Data.forEach((data, idx) => {

@@ -9,7 +9,7 @@ Heyo!😃 If you're here, we're assuming that you have some development experien
 
 The bulk of the visual is written in Typescript - while having a thorough understanding of the language will help, it won't be enough, since you'll need to understand both the PBI API and D3.js to do any sort of meaningful development. Fortunately, we have lots of helpful resources on both of those topics. In addition, having a working knowledge of Power BI will likely be helpful.
 
-The code has also (in my opinion😄) been thoroughly commented, though it may still be difficult to understand for those with no technical background.
+The code has also (in my opinion😄) been thoroughly commented, though it may still be difficult to understand for those with no technical background. Also, the other chart (targetChart: https://github.com/JesseXia-Rogers/targetChart) also has a similar readme that does contain some more specific information. Though it was primarily made for the other chart, you may still find it useful.
 
 ## Environment Setup
 - Ensure node.js is installed (https://nodejs.org/en/)

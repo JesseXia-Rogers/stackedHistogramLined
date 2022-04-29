@@ -4,7 +4,7 @@
 A multi-purpose chart designed to display historical KPI data presented in monthly report. 
 Designed to provide the same functionality as a regular PowerBi chart, with additional features (level indicators, growth selectors, etc.).
 
-# Usage
+# Overview
 Heyo!😃 If you're here, we're assuming that you have some development experience and are looking to use the code for some purpose. If you only need the chart, you can download the latest version by checking [stackedHistogramLined/dist](https://github.com/JesseXia-Rogers/stackedHistogramLined/tree/master/dist). You can find the user manual there as well.
 
 The bulk of the visual is written in Typescript - while having a thorough understanding of the language will help, it won't be enough, since you'll need to understand both the PBI API and D3.js to do any sort of meaningful development. Fortunately, we have lots of helpful resources on both of those topics. In addition, having a working knowledge of Power BI will likely be helpful.

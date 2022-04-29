@@ -4,7 +4,7 @@ import DataView = powerbi.DataView;
 import PrimitiveValue = powerbi.PrimitiveValue;
 import DataViewValueColumnGroup = powerbi.DataViewValueColumnGroup;
 
-export let LineValues: number[] = [];
+export let LineValues = [];
 export let Capacity: number[] = [];
 export let Series: string[] = [];
 export let DataNumeric: Interfaces.Numeric;
@@ -42,6 +42,7 @@ export function transformData(dataView: DataView): void {
         return;
     }
 
+    // January-2022
     
     const series: DataViewValueColumnGroup[] = dataView.categorical.values.grouped();
 
@@ -49,6 +50,9 @@ export function transformData(dataView: DataView): void {
     let columns = category.values; // creates variables to store and separate initial data
     let columnSource = category.source;
     let format = columnSource.format;
+
+    // console.log(columns)
+
     // console.log(columns, columnSource, format)
     columns = columns.map(col => { // loops through every data point in the initial dataset
         col = col ?? '';
@@ -67,6 +71,8 @@ export function transformData(dataView: DataView): void {
     });
     
     Columns = columns;
+
+    // console.log(Columns)
 
     // insert capacity data into d3
     let capacityData = {
@@ -92,14 +98,16 @@ export function transformData(dataView: DataView): void {
     });
 
     // get threshold
-    series.forEach(serie => {
-        serie.values.forEach(val => {
-            if (Object.keys(val.source.roles)[0] == 'Line Values') {
-                LineValues.push(<number>val.values[0])
-            }
-        });
+    series[0].values.forEach(val => {
+        if (Object.keys(val.source.roles)[0] == 'Line Values') {
+            val.values.forEach((v, idx) => {
+                LineValues.push({
+                    sharedAxis: columns[idx],
+                    value: <number>v
+                });
+            });
+        }
     });
-
 
     // insert rest of data
     for (let idx = 0; idx < columns.length; ++idx) {
@@ -125,7 +133,6 @@ export function transformData(dataView: DataView): void {
             D3Data.splice(idx, 1);
         }
     });
-
 
     // set global numeric vars
     calculateNumerics(series);

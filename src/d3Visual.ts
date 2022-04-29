@@ -408,7 +408,7 @@ export class D3Visual {
                     .attr('dominant-baseline', 'middle');
 
                 if (LAYOUT_SETTINGS.ChartType == 'clustered') {
-                    barLabel.attr('x', data => x(data.data.sharedAxis.toString()));
+                    barLabel.attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx + x.bandwidth() / dp.Series.length / 2);
                 } else {
                     // adds offset to account for bar positions
                     barLabel.attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / 2);
@@ -477,9 +477,7 @@ export class D3Visual {
                         return val;
                     });
 
-                    // sets x pos of label based on x-axis value + widths of bars before + 1/2 current bar width
-                    barLabel.attr('x', data => x(data.data.sharedAxis.toString()) + x.bandwidth() / dp.Series.length * idx + x.bandwidth() / dp.Series.length / 2)
-                        .attr('y', data => height - (y0(data[0]) - y0(data[1])) / 2);
+                    barLabel.attr('y', data => height - (y0(data[0]) - y0(data[1])) / 2);
                 }
             }
             // draws bars and labels for stacked chart
@@ -507,10 +505,17 @@ export class D3Visual {
                 // removes border
                 d3.selectAll('.domain').remove();
 
-                // set bar heights
+                // set bar heights and y pos
                 bar.data(serie)
                     .attr('y', data => y0(data[1]))
                     .attr('height', data => y0(data[0]) - y0(data[1]));
+
+                // get capacity column
+                if (hasCapacity) {
+                    bar.filter((_, xId) => xId == 0)
+                        .attr('y', data => y0(data[1] * CAPACITY_SETTINGS.BarHeightAdjustment))
+                        .attr('height', data => y0(data[0] * CAPACITY_SETTINGS.BarHeightAdjustment) - y0(data[1] * CAPACITY_SETTINGS.BarHeightAdjustment));
+                }
 
                 // show bar label
                 if (DATA_LABEL_SETTINGS.BarLabelToggle) {
@@ -532,6 +537,12 @@ export class D3Visual {
 
                     // bar label y pos based on upper data value - 1/2 height of bar
                     barLabel.attr('y', data => y0(data[0]) - (y0(data[0]) - y0(data[1])) / 2);
+
+                    if (hasCapacity) {
+                        barLabel.filter((_, xId) => xId == 0)
+                            .attr('y', data => y0(data[0] * CAPACITY_SETTINGS.BarHeightAdjustment)
+                                - (y0(data[0] * CAPACITY_SETTINGS.BarHeightAdjustment) - y0(data[1] * CAPACITY_SETTINGS.BarHeightAdjustment)) / 2);
+                    }
                 }
             }
 
@@ -630,31 +641,54 @@ export class D3Visual {
 
         // threshold
         if (THRESHOLD_SETTINGS.ThresholdToggle) {
-            let thresholdValue: number = dp.LineValues.reduce((a, b) => a + b, 0);
-            svg.selectAll('.lineValues')
-                .data([dp.LineValues[0]])
-                .enter()
-                .append('line')
+            // let thresholdValue: number = dp.LineValues.reduce((a, b) => a + b, 0);
+            // svg.selectAll('.lineValues')
+            //     .data([dp.LineValues[0]])
+            //     .enter()
+            //     .append('line')
+            //     .classed('lineValues', true)
+            //     .attr('fill', 'none')
+            //     .attr('stroke', THRESHOLD_SETTINGS.LineColor)
+            //     .attr('stroke-width', THRESHOLD_SETTINGS.LineThickness)
+            //     .attr('x1', 0)
+            //     .attr('x2', width)
+
+            // // sets axis to align to
+            // if (THRESHOLD_SETTINGS.ThresholdAlign) {
+            //     // align secondary y-axis
+            //     svg.selectAll('.lineValues')
+            //         .attr('y1', y1(thresholdValue))
+            //         .attr('y2', y1(thresholdValue));
+
+            // } else {
+            //     // align primary y-axis
+            //     svg.selectAll('.lineValues')
+            //         .attr('y1', y0(thresholdValue))
+            //         .attr('y2', y0(thresholdValue));
+            // }
+
+            // // sets line type
+            // if (THRESHOLD_SETTINGS.LineType == 'dashed') {
+            //     svg.selectAll('.lineValues')
+            //         .attr('stroke-dasharray', '5,4');
+            // }
+            let lineValueArray = [];
+            dp.LineValues.forEach(data => lineValueArray.push([
+                x(data.sharedAxis.toString()),
+                THRESHOLD_SETTINGS.ThresholdAlign ? y1(data.value) : y0(data.value)
+            ]));
+
+            // draws line
+            svg.append('path')
+                .datum(lineValueArray)
                 .classed('lineValues', true)
                 .attr('fill', 'none')
                 .attr('stroke', THRESHOLD_SETTINGS.LineColor)
                 .attr('stroke-width', THRESHOLD_SETTINGS.LineThickness)
-                .attr('x1', 0)
-                .attr('x2', width)
-
-            // sets axis to align to
-            if (THRESHOLD_SETTINGS.ThresholdAlign) {
-                // align secondary y-axis
-                svg.selectAll('.lineValues')
-                    .attr('y1', y1(thresholdValue))
-                    .attr('y2', y1(thresholdValue));
-
-            } else {
-                // align primary y-axis
-                svg.selectAll('.lineValues')
-                    .attr('y1', y0(thresholdValue))
-                    .attr('y2', y0(thresholdValue));
-            }
+                .attr('d', d3.line()
+                    .x(data => data[0] + x.bandwidth() / 2)
+                    .y(data => data[1] - THRESHOLD_SETTINGS.LineOffsetHeight)
+                );
 
             // sets line type
             if (THRESHOLD_SETTINGS.LineType == 'dashed') {
@@ -721,7 +755,7 @@ export class D3Visual {
                 // gets summation values for each column
                 let maxStackData: any[] = stackData[stackData.length - 1];
 
-                maxStackData.forEach(data => {
+                maxStackData.forEach((data, xId) => {
                     let maxVal = data[1];
 
                     // display value if not 0
@@ -740,7 +774,7 @@ export class D3Visual {
                                     .attr('width', sumBgWidth)
                                     .attr('height', DATA_LABEL_SETTINGS.SumLabelFontSize + bgPadding / 2)
                                     .attr('fill', DATA_LABEL_SETTINGS.SumLabelBackgroundColor)
-                                    .attr('y', y0(maxVal) - 18)
+                                    .attr('y', (hasCapacity && !xId ? y0(maxVal) / CAPACITY_SETTINGS.BarHeightAdjustment : y0(maxVal)) - 18)
                                     .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2 - sumBgWidth / 2);
                             }
 
@@ -752,7 +786,7 @@ export class D3Visual {
                                 .attr('font-family', DATA_LABEL_SETTINGS.FontFamily)
                                 .attr('text-anchor', 'middle')
                                 .attr('dominant-baseline', 'middle')
-                                .attr('y', y0(maxVal) - 10)
+                                .attr('y', (hasCapacity && !xId ? y0(maxVal * CAPACITY_SETTINGS.BarHeightAdjustment) : y0(maxVal)) - 10)
                                 .attr('x', x(data.data.sharedAxis) + x.bandwidth() / 2)
                                 .text(text);
                         }
@@ -896,6 +930,11 @@ export class D3Visual {
                     // defines coordinate points for label and line
                     let growth1Y = y0(primGrowth1Sum) - heightOffset;
                     let growth1X = x(primarySelect1) + x.bandwidth() / 2;
+
+                    if (hasCapacity) {
+                        growth1Y = y0(primGrowth1Sum * CAPACITY_SETTINGS.BarHeightAdjustment) - heightOffset;
+                    }
+
                     let growth2Y = y0(primGrowth2Sum) - heightOffset;
                     let growth2X = x(primarySelect2) + x.bandwidth() / 2;
 

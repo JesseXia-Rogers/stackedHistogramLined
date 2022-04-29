@@ -160,6 +160,12 @@
                     "type": {
                         "numeric": true
                     }
+                },
+                "BarHeightAdjustment": {
+                    "displayName": "Bar Height Adjustment",
+                    "type": {
+                        "numeric": true
+                    }
                 }
             }
         },

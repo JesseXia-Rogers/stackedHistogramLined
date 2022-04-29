@@ -2,7 +2,7 @@ import * as Interfaces from './interfaces';
 import powerbi from "powerbi-visuals-api";
 import DataView = powerbi.DataView;
 import DataViewValueColumnGroup = powerbi.DataViewValueColumnGroup;
-export declare let LineValues: number[];
+export declare let LineValues: any[];
 export declare let Capacity: number[];
 export declare let Series: string[];
 export declare let DataNumeric: Interfaces.Numeric;

@@ -30,6 +30,7 @@ export declare class CapacitySettings {
     LabelAngle: number;
     XOffset: number;
     YOffset: number;
+    BarHeightAdjustment: number;
 }
 export declare class XAxisSettings {
     FontFamily: string;

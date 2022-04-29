@@ -68,6 +68,8 @@ export class CapacitySettings {
 
     public XOffset: number = 0;
     public YOffset: number = 0;
+
+    public BarHeightAdjustment: number = 1;
 }
 
 export class XAxisSettings {
